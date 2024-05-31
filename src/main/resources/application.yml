@@ -23,20 +23,16 @@ spring:
       max-open-prepared-statements: 20 # 要启用PSCache，必须配置大于0，当大于0时， poolPreparedStatements自动触发修改为true，在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
       keep-alive: on  # 连接池中的minIdle数量以内的连接，空闲时间超过minEvictableIdleTimeMillis，则会执行keepAlive操作
       aop-patterns:   # Spring 监控，利用aop 对指定接口的执行时间，jdbc数进行记录
-      filters: stat,wall,log4j2  # 启用内置过滤器（第一个 stat必须，否则监控不到SQL）
+      filters: stat,wall  # 启用内置过滤器（第一个 stat必须，否则监控不到SQL）
       filter:
         stat:
           enabled: on   # 开启DruidDatasource的状态监控
           db-type: mysql
           log-slow-sql: on   # 开启慢sql监控，超过2s 就认为是慢sql，记录到日志中
           slow-sql-millis: 2000
-        slf4j:
-          enabled: on
-          statement-log-error-enabled: on
-          statement-create-after-log-enabled: off
-          statement-close-after-log-enabled: off
-          result-set-open-after-log-enabled: off
-          result-set-close-after-log-enabled: off
+        wall:
+          config:
+            multi-statement-allow: on
       web-stat-filter:
         enabled: on  # 配置WebStatFilter，用于采集web关联监控的数据
         url-pattern: /*  # 过滤所有url
@@ -48,8 +44,8 @@ spring:
         url-pattern: /druid/*   # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
         reset-enable: off   # 不允许清空统计数据,重新计算
         login-username: root     # 配置监控页面访问账号
-        login-password: root123   # 配置监控页面访问密码
-        allow: 127.0.0.1   # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
+        login-password: 123456   # 配置监控页面访问密码
+        allow:  # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
         deny:   # 拒绝访问的地址，deny优先于allow，如果在deny列表中，就算在allow列表中，也会被拒绝
 
 mybatis:
