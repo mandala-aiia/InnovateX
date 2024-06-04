@@ -22,7 +22,6 @@ spring:
       pool-prepared-statements: on # 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle
       max-open-prepared-statements: 20 # 要启用PSCache，必须配置大于0，当大于0时， poolPreparedStatements自动触发修改为true，在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
       keep-alive: on  # 连接池中的minIdle数量以内的连接，空闲时间超过minEvictableIdleTimeMillis，则会执行keepAlive操作
-      aop-patterns:   # Spring 监控，利用aop 对指定接口的执行时间，jdbc数进行记录
       filters: stat,wall,slf4j  # 启用内置过滤器（第一个 stat必须，否则监控不到SQL）
       filter:
         stat:
