@@ -1,54 +1,7 @@
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://124.71.167.113:3306/innovatex?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: root
-    password: 123456
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid:
-      initial-size: 5  #初始连接数
-      min-idle: 10     # 最小连接池数量
-      max-active: 20   # 最大连接池数量
-      max-wait: 60000   # 配置获取连接等待超时的时间
-      connect-timeout: 30000 # 配置连接超时时间
-      socket-timeout: 60000  # 配置网络超时时间
-      time-between-eviction-runs-millis: 60000 # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
-      min-evictable-idle-time-millis: 300000 # 配置一个连接在池中最小生存的时间，单位是毫秒
-      max-evictable-idle-time-millis: 900000 # 配置一个连接在池中最大生存的时间，单位是毫秒
-      validation-query: select 1 from dual  # 配置检测连接是否有效
-      test-while-idle: on  # 应用向连接池申请连接，并且testOnBorrow为false时，连接池将会判断连接是否处于空闲状态，如果是，则验证这条连接是否可用
-      test-on-borrow: off # 如果为true，默认是false，应用向连接池申请连接时，连接池会判断这条连接是否是可用的
-      test-on-return: off # 如果为true（默认false），当应用使用完连接，连接池回收连接的时候会判断该连接是否还可用
-      pool-prepared-statements: on # 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle
-      max-open-prepared-statements: 20 # 要启用PSCache，必须配置大于0，当大于0时， poolPreparedStatements自动触发修改为true，在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
-      keep-alive: on  # 连接池中的minIdle数量以内的连接，空闲时间超过minEvictableIdleTimeMillis，则会执行keepAlive操作
-      aop-patterns:   # Spring 监控，利用aop 对指定接口的执行时间，jdbc数进行记录
-      filters: stat,wall  # 启用内置过滤器（第一个 stat必须，否则监控不到SQL）
-      filter:
-        stat:
-          enabled: on   # 开启DruidDatasource的状态监控
-          db-type: mysql
-          log-slow-sql: on   # 开启慢sql监控，超过2s 就认为是慢sql，记录到日志中
-          slow-sql-millis: 2000
-        wall:
-          config:
-            multi-statement-allow: on
-      web-stat-filter:
-        enabled: on  # 配置WebStatFilter，用于采集web关联监控的数据
-        url-pattern: /*  # 过滤所有url
-        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"   # 排除一些不必要的url
-        session-stat-enable: on    # 开启session统计功能
-        session-stat-max-count: 1000  # session的最大个数,默认100
-      stat-view-servlet:
-        enabled: on  # 配置StatViewServlet（监控页面），用于展示Druid的统计信息
-        url-pattern: /druid/*   # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
-        reset-enable: off   # 不允许清空统计数据,重新计算
-        login-username: root     # 配置监控页面访问账号
-        login-password: 123456   # 配置监控页面访问密码
-        allow:  # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
-        deny:   # 拒绝访问的地址，deny优先于allow，如果在deny列表中，就算在allow列表中，也会被拒绝
-
-mybatis:
-  config-location: classpath:mybatis/mybatis-config.xml
 server:
   port: 8080
+spring:
+  profiles:
+    active: druid
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
