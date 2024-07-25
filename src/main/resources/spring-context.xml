@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="propertySourcesPlaceholderConfigurer"
+          class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:app-first.properties</value>
+                <value>classpath:app-second.properties</value>
+                <value>classpath:app.properties</value>
+            </list>
+        </property>
+        <property name="fileEncoding" value="UTF-8"/>
+        <property name="order" value="1"/>
+    </bean>
+
+    <bean id="propertyOverrideConfigurer"
+          class="org.springframework.beans.factory.config.PropertyOverrideConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:override.properties</value>
+            </list>
+        </property>
+        <property name="fileEncoding" value="UTF-8"/>
+    </bean>
+
+    <import resource="dev-context.xml"/>
+
+    <bean id="app" class="com.alec.InnovateX.App" init-method="initApp" destroy-method="destroyApp">
+        <property name="appName" value="${app.name}"/>
+        <property name="appDev" ref="appDev"/>
+        <property name="desc">
+            <list>
+                <value>${desc.name_1}</value>
+                <value>${desc.name_2}</value>
+                <value>${desc.name_3}</value>
+            </list>
+        </property>
+        <property name="appFirSec" value="${app.appFirSec}"/>
+    </bean>
+
+    <!--FactoryBean 测试   -->
+    <bean id="appFactoryBean" class="com.alec.InnovateX.AppFactoryBean"/>
+
+    <!--    构造器注入循环依赖无法解决  setter注入循环依赖可以解决-->
+    <bean id="circleA" class="com.alec.InnovateX.CircleA">
+        <!--            <constructor-arg index="0" ref="circleB"/>-->
+        <property name="circleB" ref="circleB"/>
+    </bean>
+    <bean id="circleB" class="com.alec.InnovateX.CircleB">
+        <!--            <constructor-arg index="0" ref="circleC"/>-->
+        <property name="circleC" ref="circleC"/>
+    </bean>
+    <bean id="circleC" class="com.alec.InnovateX.CircleC">
+        <!--            <constructor-arg index="0" ref="circleA"/>-->
+        <property name="circleA" ref="circleA"/>
+    </bean>
+
+    <bean id="appListener" class="com.alec.InnovateX.AppEventListener"/>
+
+    <bean id="appBeanFactoryPostProcessor" class="com.alec.InnovateX.AppBeanFactoryPostProcessor"/>
+
+    <bean id="appBeanPostProcessor" class="com.alec.InnovateX.AppBeanPostProcessor"/>
+
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="message"/>
+    </bean>
+
+    <bean id="lifecycleProcessor" class="com.alec.InnovateX.AppLifeCycleProcessor"/>
+
+    <bean id="appContextClosedListener" class="com.alec.InnovateX.AppContextClosedListener"/>
+
+    <bean id="appBeanNameAware" class="com.alec.InnovateX.AppBeanNameAware"/>
+
+    <bean id="appApplicationContextAware" class="com.alec.InnovateX.AppApplicationContextAware"/>
+
+    <bean id="appInstantiationAwareBeanPostProcessor"
+          class="com.alec.InnovateX.AppInstantiationAwareBeanPostProcessor"/>
+</beans>
+
