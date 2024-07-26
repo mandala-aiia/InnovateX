@@ -4,12 +4,12 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.Ordered;
 
-public class AppBeanPostProcessor implements BeanPostProcessor, Ordered {
+public class AppBeanPostProcessor implements BeanPostProcessor/*, Ordered */{
 
-    @Override
+/*    @Override
     public int getOrder() {
         return 0;
-    }
+    }*/
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {

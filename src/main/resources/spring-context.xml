@@ -78,5 +78,19 @@
 
     <bean id="appInstantiationAwareBeanPostProcessor"
           class="com.alec.InnovateX.AppInstantiationAwareBeanPostProcessor"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <import resource="aspect-context.xml"/>
+
 </beans>
 

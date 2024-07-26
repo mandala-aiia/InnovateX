@@ -6,14 +6,15 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Locale;
 
 // @SpringBootTest
 class InnovateXApplicationTests {
 
-	@Test
-	void contextLoads() {
+    @Test
+    void contextLoads() {
 
         Resource resource = new ClassPathResource("spring-context.xml");
         GenericApplicationContext context = new GenericApplicationContext();
@@ -35,9 +36,19 @@ class InnovateXApplicationTests {
         System.out.println(appFaBean);
         System.out.println(message);
 
+        JdbcTemplate jdbcTemplate = context.getBean(JdbcTemplate.class);
+        System.out.println("通过jdbcTemplate查询的结果：" + jdbcTemplate.queryForList("select uuid from innovatex limit 1", String.class));
+
+        AppPointcut appPointcut = context.getBean(AppPointcut.class);
+        appPointcut.appPointcutBefore();
+        appPointcut.appPointcutReturning();
+        // appPointcut.appPointcutThrowing();  //异常通知
+        appPointcut.appPointcutAround();
+        appPointcut.appPointcutAfter();
+        appPointcut.appPointcutAnnotation();
+
         context.stop();
         context.close();
-
-	}
+    }
 
 }
