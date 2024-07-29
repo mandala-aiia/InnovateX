@@ -39,6 +39,7 @@
             </list>
         </property>
         <property name="appFirSec" value="${app.appFirSec}"/>
+        <property name="appResource" value="classpath:app-second.properties"/>
     </bean>
 
     <!--FactoryBean 测试   -->

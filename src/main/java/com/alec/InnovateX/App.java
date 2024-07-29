@@ -1,6 +1,7 @@
 package com.alec.InnovateX;
 
 import lombok.Data;
+import org.springframework.core.io.Resource;
 
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class App {
 
     private String appFirSec;
 
+    private Resource appResource;
+
     public void initApp() {
         System.out.println("App....init");
     }
@@ -35,6 +38,7 @@ public class App {
                 ", appDev=" + appDev +
                 ", desc=" + desc +
                 ", appFirSec='" + appFirSec + '\'' +
+                ", appResource='" + appResource + '\'' +
                 '}';
     }
 }
