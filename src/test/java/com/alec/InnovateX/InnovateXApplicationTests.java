@@ -6,8 +6,8 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.io.IOException;
 import java.util.Locale;
 
 // @SpringBootTest
@@ -36,9 +36,6 @@ class InnovateXApplicationTests {
         System.out.println(appFaBean);
         System.out.println(message);
 
-        JdbcTemplate jdbcTemplate = context.getBean(JdbcTemplate.class);
-        System.out.println("通过jdbcTemplate查询的结果：" + jdbcTemplate.queryForList("select uuid from innovatex limit 1", String.class));
-
         AppPointcut appPointcut = context.getBean(AppPointcut.class);
         appPointcut.appPointcutBefore();
         appPointcut.appPointcutReturning();
@@ -47,8 +44,14 @@ class InnovateXApplicationTests {
         appPointcut.appPointcutAfter();
         appPointcut.appPointcutAnnotation();
 
+        AppJdbcTemplate appJdbcTemplate = context.getBean(AppJdbcTemplate.class);
+        System.out.println("通过jdbcTemplate查询的结果：" + appJdbcTemplate.query());
+        // System.out.println("通过jdbcTemplate新增的数据：" + appJdbcTemplate.insert());
+        // System.out.println("通过jdbcTemplate修改的数据：" + appJdbcTemplate.update()); //xml事务异常回滚
+        // System.out.println("通过jdbcTemplate中的编程式事务修改的数据：" + appJdbcTemplate.programmatic()); //编程式事务异常回滚
+        // System.out.println("通过namedParameterJdbcTemplate新增的数据：" + appJdbcTemplate.namedParameter());
+
         context.stop();
         context.close();
     }
-
 }
