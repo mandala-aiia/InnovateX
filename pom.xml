@@ -18,7 +18,8 @@
         <druid.version>1.2.23</druid.version>
         <mysql.version>8.0.33</mysql.version>
         <mybatis.version>3.0.3</mybatis.version>
-        <rocketmq.version>2.3.0</rocketmq.version>
+        <hutool.vsrsion>5.8.32</hutool.vsrsion>
+        <lombok.vsrsion>1.18.34</lombok.vsrsion>
     </properties>
     <dependencies>
         <dependency>
@@ -55,6 +56,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+            <version>${lombok.vsrsion}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -70,7 +72,7 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.8.32</version>
+            <version>${hutool.vsrsion}</version>
         </dependency>
     </dependencies>
     <build>
