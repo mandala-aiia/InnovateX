@@ -80,6 +80,9 @@
     <bean id="appInstantiationAwareBeanPostProcessor"
           class="com.alec.InnovateX.AppInstantiationAwareBeanPostProcessor"/>
 
+    <bean id="appInterface"
+          class="com.alec.InnovateX.AppAbsServiceFirstImpl"/>
+
     <import resource="aspect-context.xml"/>
 
     <import resource="cache-context.xml"/>
