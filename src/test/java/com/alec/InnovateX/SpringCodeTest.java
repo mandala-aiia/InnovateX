@@ -47,7 +47,8 @@ public class SpringCodeTest {
         // System.out.println("通过jdbcTemplate中的编程式事务修改的数据：" + appJdbcTemplate.programmatic()); //编程式事务异常回滚
         // System.out.println("通过namedParameterJdbcTemplate新增的数据：" + appJdbcTemplate.namedParameter());
 
-        AppInterface appInterface = context.getBean(AppInterface.class);
+        String appFace = "appInterface_";
+        AppInterface appInterface = context.getBean(appFace+"02",AppInterface.class);
         appInterface.display();
         appInterface.submit();
 
