@@ -51,6 +51,8 @@ public class SpringCodeTest {
         AppInterface appInterface = context.getBean(appFace+"02",AppInterface.class);
         appInterface.display();
         appInterface.submit();
+        appInterface.defaultMethod();
+        AppInterface.staticMethod();
 
         context.stop();
         context.close();
