@@ -5,6 +5,6 @@
        xmlns:c="http://www.springframework.org/schema/c"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="appDev" class="com.alec.InnovateX.AppDev" p:appDevName="${appDev.name}"
+    <bean id="appDev" class="com.alec.InnovateX.spring.AppDev" p:appDevName="${appDev.name}"
           p:appDevOverride="${appDev.override}" c:appDevC="${appDev.appDevC}"/>
 </beans>
