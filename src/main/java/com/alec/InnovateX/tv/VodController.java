@@ -16,7 +16,8 @@ public class VodController {
     @GetMapping("/search")
     public VodResponse searchVod(
             @RequestParam(value = "wd", required = false) String wd,
-            @RequestParam(value = "page") Integer page) {
+            @RequestParam(value = "page") Integer page,
+            @RequestParam(value = "category",required = false) String category) {
         return vodService.searchVod(wd, page);
     }
 
