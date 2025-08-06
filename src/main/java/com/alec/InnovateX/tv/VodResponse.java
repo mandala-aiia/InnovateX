@@ -12,5 +12,5 @@ public class VodResponse {
     private Integer pagecount;
     private String limit;
     private Integer total;
-    private List<VodItem> list;
+    private List<VodInfo> list;
 }

@@ -24,7 +24,7 @@ public class VodService {
         urlBuilder.append("&pg=").append(page);
         HttpRequest request = HttpRequest
                 .get(urlBuilder.toString())
-                .setHttpProxy("127.0.0.1", 7893);
+                .setHttpProxy("127.0.0.1", 7894);
         try (HttpResponse response = request.execute()) {
             return JSONUtil.toBean(response.body(), VodResponse.class, false);
         }
@@ -33,7 +33,7 @@ public class VodService {
     public VodDetailResponse detailVod(Integer ids) {
         HttpRequest request = HttpRequest
                 .get(BASE_URL + "&ids=" + ids)
-                .setHttpProxy("127.0.0.1", 7893);
+                .setHttpProxy("127.0.0.1", 7894);
         try (HttpResponse response = request.execute()) {
             return JSONUtil.toBean(response.body(), VodDetailResponse.class, false);
         }
