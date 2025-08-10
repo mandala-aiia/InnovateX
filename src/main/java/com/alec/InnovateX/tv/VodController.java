@@ -3,6 +3,7 @@ package com.alec.InnovateX.tv;
 
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/vod")
 public class VodController {
@@ -13,26 +14,17 @@ public class VodController {
         this.vodService = vodService;
     }
 
-    @GetMapping("/search")
-    public VodResponse searchVod(
-            @RequestParam(value = "wd", required = false) String wd,
-            @RequestParam(value = "page") Integer page,
-            @RequestParam(value = "category",required = false) String category) {
-        return vodService.searchVod(wd, page);
+    @GetMapping("/front")
+    public VodResponse vod() {
+        return vodService.vod();
     }
 
-    @GetMapping("/detail")
-    public VodDetailResponse detailVod(@RequestParam(value = "ids") Integer ids) {
-        return vodService.detailVod(ids);
-    }
-
-    @GetMapping("/play")
-    public String play(
-            @RequestParam("ids") Integer ids
+    @GetMapping("/video/list")
+    public VodResponse vodVideoList(
+            @RequestParam("type_id") Integer type_id,
+            @RequestParam("page") Integer page,
+            @RequestParam(value = "vod_id",required = false) Integer vod_id
     ) {
-        VodDetailResponse vodDetailResponse = vodService.detailVod(ids);
-        VodInfo vodInfo = vodDetailResponse.getList().get(0);
-        String rawPlay = vodInfo.getVod_play_url();
-        return rawPlay.split("\\$")[1];
+        return vodService.vodVideoList(type_id, page,vod_id);
     }
 }

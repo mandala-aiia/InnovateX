@@ -13,4 +13,5 @@ public class VodResponse {
     private String limit;
     private Integer total;
     private List<VodInfo> list;
+    private List<VodType> clazz;
 }

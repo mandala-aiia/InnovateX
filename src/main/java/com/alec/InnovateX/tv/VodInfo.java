@@ -2,9 +2,10 @@ package com.alec.InnovateX.tv;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class VodInfo {
-
     private Integer vod_id;
     private Integer type_id;
     private Integer type_id_1;
@@ -80,6 +81,7 @@ public class VodInfo {
     private String vod_play_server;
     private String vod_play_note;
     private String vod_play_url;
+    private List<VodUrl> vod_play_url_list;
     private String vod_down_from;
     private String vod_down_server;
     private String vod_down_note;

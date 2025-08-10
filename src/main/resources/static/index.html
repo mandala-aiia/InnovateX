@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InnovateX 视频平台</title>
-    <script src="./js/3.4.17.js"></script>
-    <link href="./css/font-awesome.min.css" rel="stylesheet">
-    <!-- 引入HLS.js库用于播放m3u8格式 -->
-    <script src="./js/hls.min.js"></script>
+    <title>VideoFusion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#165DFF',
-                        secondary: '#36CFC9',
-                        dark: '#1D2129',
-                        light: '#F2F3F5',
-                        'gray-medium': '#86909C'
+                        primary: '#4F46E5', // 深紫色作为主色调，更具现代感
+                        secondary: '#EC4899', // 亮粉色作为强调色
+                        dark: '#0F172A',
+                        light: '#F8FAFC'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
                 }
             }
         }
@@ -31,802 +32,861 @@
             .content-auto {
                 content-visibility: auto;
             }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .backdrop-blur {
+                backdrop-filter: blur(8px);
+            }
             .card-hover {
-                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+                transition: all 0.3s ease;
             }
-            .text-gradient {
-                @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
-            }
-            .nav-tab {
-                @apply px-4 py-2 rounded-full transition-all duration-300 cursor-pointer;
-            }
-            .nav-tab.active {
-                @apply bg-primary text-white;
-            }
-            .nav-tab:not(.active) {
-                @apply hover:bg-gray-100;
-            }
-            .detail-item {
-                @apply mb-4;
-            }
-            .detail-label {
-                @apply text-gray-medium w-24 inline-block;
-            }
-            /* 图片加载状态样式 */
-            .video-container {
-                @apply relative overflow-hidden;
-            }
-            .video-pic {
-                @apply object-cover w-full aspect-[2/3];
-                opacity: 1;
-                transition: opacity 0.5s ease-in-out;
-            }
-            .pic-placeholder {
-                @apply absolute inset-0 bg-gray-200 flex items-center justify-center;
-                z-index: 1;
-            }
-            .video-pic.loaded + .pic-placeholder {
-                @apply opacity-0 pointer-events-none;
-                transition: opacity 0.5s ease-in-out;
+            .card-hover:hover {
+                transform: translateY(-6px);
             }
         }
     </style>
 </head>
-<body class="bg-gray-50 text-dark">
-<!-- 导航栏 -->
-<header class="sticky top-0 z-50 bg-white shadow-sm transition-all duration-300">
-    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-            <i class="fa fa-play-circle text-primary text-3xl"></i>
-            <h1 class="text-xl font-bold text-gradient">InnovateX 视频</h1>
-        </div>
+<body class="bg-gray-50 text-gray-900 dark:bg-dark dark:text-gray-100 min-h-screen transition-colors duration-300">
+    <!-- 顶部通知栏 -->
+    <div class="bg-primary/10 dark:bg-primary/20 text-primary py-2 px-4 text-center text-sm">
+        <p>🎉 新用户专享：全场视频免费观看 <a href="#" class="font-medium underline ml-1">立即查看</a></p>
+    </div>
 
-        <!-- 搜索框 -->
-        <div class="hidden md:flex items-center flex-1 max-w-xl mx-8">
-            <div class="relative w-full">
-                <input type="text" id="search-input"
-                       class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                       placeholder="搜索电影、电视剧...">
-                <button id="search-btn" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-medium">
-                    <i class="fa fa-search"></i>
+    <!-- 导航栏 -->
+    <header class="sticky top-0 z-50 bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-md transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center">
+                <a href="#" class="text-primary font-bold text-2xl flex items-center">
+                    <i class="fa fa-play-circle mr-2 transform rotate-12"></i>
+                    <span>VideoFusion</span>
+                </a>
+            </div>
+            
+            <!-- 主导航 - 桌面端 -->
+            <nav class="hidden md:flex items-center space-x-6 mx-8">
+                <a href="#" class="font-medium hover:text-primary transition-colors">首页</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors">电影</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors">剧集</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors">排行榜</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors">最新更新</a>
+            </nav>
+            
+            <!-- 搜索框 -->
+            <div class="hidden md:block relative w-64 lg:w-80">
+                <input type="text" id="search-input" placeholder="搜索电影、电视剧..." 
+                    class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                <i class="fa fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+            </div>
+            
+            <!-- 导航菜单 -->
+            <nav class="flex items-center space-x-3">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative overflow-hidden group">
+                    <i class="fa fa-moon-o dark:hidden text-lg z-10"></i>
+                    <i class="fa fa-sun-o hidden dark:inline text-lg z-10"></i>
+                    <span class="absolute inset-0 bg-primary/10 rounded-full scale-0 group-hover:scale-100 transition-transform origin-center duration-300"></span>
+                </button>
+                <a href="#" class="hidden md:flex items-center px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative overflow-hidden group">
+                    <i class="fa fa-star-o mr-1 z-10"></i>
+                    <span class="z-10">收藏</span>
+                    <span class="absolute inset-0 bg-primary/10 rounded-full scale-0 group-hover:scale-100 transition-transform origin-center duration-300"></span>
+                </a>
+                <a href="#" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative overflow-hidden group">
+                    <i class="fa fa-user-o text-lg z-10"></i>
+                    <span class="absolute inset-0 bg-primary/10 rounded-full scale-0 group-hover:scale-100 transition-transform origin-center duration-300"></span>
+                </a>
+                <button class="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" id="mobile-menu-btn">
+                    <i class="fa fa-bars text-lg"></i>
+                </button>
+            </nav>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+            <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+                <div class="relative">
+                    <input type="text" id="mobile-search-input" placeholder="搜索电影、电视剧..." 
+                        class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+                    <i class="fa fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                </div>
+                <a href="#" class="font-medium hover:text-primary transition-colors py-2">首页</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors py-2">电影</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors py-2">剧集</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors py-2">排行榜</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors py-2">最新更新</a>
+                <a href="#" class="font-medium hover:text-primary transition-colors py-2 flex items-center">
+                    <i class="fa fa-star-o mr-2"></i> 收藏
+                </a>
+            </div>
+        </div>
+        
+        <!-- 分类导航 -->
+        <div class="bg-gray-100 dark:bg-gray-700/50 overflow-x-auto scrollbar-hide border-t dark:border-gray-700">
+            <div class="container mx-auto px-4 py-3 flex space-x-2 md:space-x-4 whitespace-nowrap">
+                <button class="category-btn active px-4 py-2 rounded-full bg-primary text-white font-medium transition-all shadow-md shadow-primary/20" data-category="all">全部</button>
+                <button class="category-btn px-4 py-2 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-medium" data-category="movie">电影</button>
+                <button class="category-btn px-4 py-2 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-medium" data-category="tv">电视剧</button>
+                <button class="category-btn px-4 py-2 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-medium" data-category="anime">动漫</button>
+                <button class="category-btn px-4 py-2 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-medium" data-category="variety">综艺</button>
+                <button class="category-btn px-4 py-2 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-medium" data-category="documentary">纪录片</button>
+                <button class="category-btn px-4 py-2 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-medium" data-category="music">音乐</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- 轮播横幅 -->
+        <section class="mb-10 relative overflow-hidden rounded-2xl shadow-xl">
+            <div id="carousel" class="relative h-[300px] sm:h-[400px] md:h-[500px]">
+                <!-- 轮播内容将通过JS动态加载 -->
+                <div class="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                    <i class="fa fa-spinner fa-spin text-5xl text-gray-400 animate-pulse-slow"></i>
+                </div>
+                
+                <!-- 轮播控制按钮 -->
+                <button id="carousel-prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center z-10 transition-all">
+                    <i class="fa fa-chevron-left"></i>
+                </button>
+                <button id="carousel-next" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center z-10 transition-all">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+                
+                <!-- 轮播指示器 -->
+                <div id="carousel-indicators" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                    <!-- 指示器将通过JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 热门推荐 -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold flex items-center">
+                    <i class="fa fa-fire text-red-500 mr-2"></i>热门推荐
+                </h2>
+                <a href="#" class="text-primary hover:text-primary/80 flex items-center transition-colors">
+                    <span>查看更多</span>
+                    <i class="fa fa-angle-right ml-1"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+                <!-- 热门视频将通过JS动态加载 -->
+                <div class="col-span-full flex justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                    <i class="fa fa-spinner fa-spin text-4xl text-gray-400 animate-pulse-slow"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分类推荐 -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold flex items-center">
+                    <i class="fa fa-th-large text-primary mr-2"></i>为你推荐
+                </h2>
+                <div class="flex space-x-3">
+                    <button id="sort-popular" class="px-4 py-2 rounded-lg bg-primary text-white flex items-center shadow-md shadow-primary/20">
+                        <i class="fa fa-star mr-2"></i> 热门
+                    </button>
+                    <button id="sort-latest" class="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors">
+                        <i class="fa fa-clock-o mr-2"></i> 最新
+                    </button>
+                </div>
+            </div>
+            
+            <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+                <!-- 视频卡片将通过JS动态加载 -->
+                <div class="col-span-full flex justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                    <i class="fa fa-spinner fa-spin text-4xl text-gray-400 animate-pulse-slow"></i>
+                </div>
+            </div>
+            
+            <!-- 加载更多 -->
+            <div class="mt-10 text-center">
+                <button id="load-more" class="px-8 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary font-medium rounded-lg transition-all shadow-sm hover:shadow flex items-center mx-auto">
+                    <span>加载更多</span>
+                    <i class="fa fa-refresh ml-2"></i>
                 </button>
             </div>
-        </div>
+        </section>
+    </main>
 
-        <div class="flex items-center space-x-4">
-            <button class="md:hidden text-gray-medium" id="mobile-search-btn">
-                <i class="fa fa-search text-xl"></i>
+    <!-- 视频播放模态框 -->
+    <div id="video-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-6xl bg-gray-900 rounded-xl overflow-hidden relative transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <button id="close-modal" class="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-all hover:scale-110">
+                <i class="fa fa-times"></i>
             </button>
+            
+            <div class="aspect-video bg-black relative">
+                <video id="video-player" class="w-full h-full object-contain" controls></video>
+                <div class="absolute top-4 left-4 bg-primary/90 text-white px-3 py-1 rounded-full text-sm flex items-center">
+                    <i class="fa fa-circle text-xs mr-2 animate-pulse"></i>
+                    <span>正在播放</span>
+                </div>
+            </div>
+            
+            <div class="p-6 md:p-8">
+                <h3 id="modal-title" class="text-2xl font-bold text-white mb-3"></h3>
+                <p id="modal-desc" class="text-gray-300 mb-6 leading-relaxed"></p>
+                
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <span id="modal-category" class="px-3 py-1 bg-gray-700 text-gray-200 rounded-full text-sm"></span>
+                    <span id="modal-year" class="px-3 py-1 bg-gray-700 text-gray-200 rounded-full text-sm"></span>
+                    <span id="modal-rating" class="px-3 py-1 bg-yellow-600 text-white rounded-full text-sm flex items-center">
+                        <i class="fa fa-star mr-1"></i> <span></span>
+                    </span>
+                    <span id="modal-duration" class="px-3 py-1 bg-gray-700 text-gray-200 rounded-full text-sm flex items-center">
+                        <i class="fa fa-clock-o mr-1"></i> <span></span>
+                    </span>
+                </div>
+                
+                <!-- 剧集列表 -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-white font-medium text-lg">选集</h4>
+                        <span class="text-gray-400 text-sm" id="episodes-count"></span>
+                    </div>
+                    <div id="episodes-container" class="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-15 gap-2 max-h-48 overflow-y-auto scrollbar-hide pr-2">
+                        <!-- 剧集将通过JS动态加载 -->
+                    </div>
+                </div>
+                
+                <!-- 视频操作按钮 -->
+                <div class="mt-6 flex flex-wrap gap-4">
+                    <button class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-all">
+                        <i class="fa fa-plus"></i>
+                        <span>加入收藏</span>
+                    </button>
+                    <button class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg transition-all">
+                        <i class="fa fa-share-alt"></i>
+                        <span>分享</span>
+                    </button>
+                    <button class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg transition-all">
+                        <i class="fa fa-thumbs-up"></i>
+                        <span>点赞</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 移动端搜索框 -->
-    <div id="mobile-search" class="md:hidden hidden px-4 pb-3">
-        <div class="relative w-full">
-            <input type="text" id="mobile-search-input"
-                   class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                   placeholder="搜索电影、电视剧...">
-            <button id="mobile-search-submit" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-medium">
-                <i class="fa fa-search"></i>
-            </button>
+    <!-- 页脚 -->
+    <footer class="bg-white dark:bg-gray-800 shadow-inner mt-16 py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <a href="#" class="text-primary font-bold text-2xl flex items-center mb-4">
+                        <i class="fa fa-play-circle mr-2 transform rotate-12"></i>
+                        <span>VideoFusion</span>
+                    </a>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">您的一站式视频娱乐平台，汇聚全网优质影视内容。</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-500 hover:text-primary transition-colors text-xl">
+                            <i class="fa fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-gray-500 hover:text-primary transition-colors text-xl">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-500 hover:text-primary transition-colors text-xl">
+                            <i class="fa fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-gray-500 hover:text-primary transition-colors text-xl">
+                            <i class="fa fa-youtube-play"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-lg mb-4">快速链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">首页</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">电影</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">电视剧</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">动漫</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">综艺</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-lg mb-4">支持</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">帮助中心</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">联系我们</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">隐私政策</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">使用条款</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">常见问题</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-lg mb-4">订阅更新</h4>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">获取最新影视资讯和更新</p>
+                    <div class="flex">
+                        <input type="email" placeholder="您的邮箱地址" class="flex-1 px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-100 dark:bg-gray-700">
+                        <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-r-lg transition-colors">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t dark:border-gray-700 mt-10 pt-6 text-center text-gray-600 dark:text-gray-400">
+                <p>© 2023 VideoFusion 视频聚合平台 | 仅供学习使用，请勿用于商业用途</p>
+            </div>
         </div>
-    </div>
+    </footer>
 
-    <!-- 分类导航标签 -->
-    <div class="container mx-auto px-4 py-2 overflow-x-auto scrollbar-hide">
-        <div class="flex space-x-2 min-w-max pb-2">
-            <div class="nav-tab active" data-category="all">
-                <i class="fa fa-home mr-1"></i> 首页
-            </div>
-            <div class="nav-tab" data-category="movie">
-                <i class="fa fa-film mr-1"></i> 电影
-            </div>
-            <div class="nav-tab" data-category="series">
-                <i class="fa fa-television mr-1"></i> 剧集
-            </div>
-            <div class="nav-tab" data-category="anime">
-                <i class="fa fa-picture-o mr-1"></i> 动漫
-            </div>
-            <div class="nav-tab" data-category="documentary">
-                <i class="fa fa-book mr-1"></i> 纪录片
-            </div>
-            <div class="nav-tab" data-category="variety">
-                <i class="fa fa-music mr-1"></i> 综艺
-            </div>
-        </div>
-    </div>
-</header>
+    <script>
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 初始化页面
+            initPage();
+            
+            // 事件监听
+            setupEventListeners();
+        });
 
-<main class="container mx-auto px-4 py-6">
-    <!-- 返回按钮 - 播放视图时显示 -->
-    <div id="back-container" class="mb-4 hidden">
-        <button id="back-btn" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors">
-            <i class="fa fa-arrow-left mr-1"></i> 返回列表
-        </button>
-    </div>
+        // 初始化页面
+        function initPage() {
+            // 检查主题偏好
+            checkThemePreference();
+            
+            // 加载轮播
+            loadCarousel();
+            
+            // 加载热门视频
+            loadFeaturedVideos();
+            
+            // 加载视频列表
+            loadVideoList();
+        }
 
-    <!-- 播放视图 - 包含播放器和详情 -->
-    <div id="play-view" class="hidden mb-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 内嵌播放器 -->
-            <div class="lg:col-span-2">
-                <div class="bg-black rounded-lg overflow-hidden shadow-xl">
-                    <div class="relative aspect-video">
-                        <video id="video-player" class="w-full h-full" controls poster="" preload="metadata"></video>
+        // 设置事件监听
+        function setupEventListeners() {
+            // 主题切换
+            $('#theme-toggle').click(toggleTheme);
+            
+            // 移动端菜单切换
+            $('#mobile-menu-btn').click(function() {
+                $('#mobile-menu').slideToggle(300);
+            });
+            
+            // 搜索功能
+            $('#search-input, #mobile-search-input').keypress(function(e) {
+                if (e.which === 13) performSearch();
+            });
+            
+            // 轮播控制
+            $('#carousel-prev').click(prevSlide);
+            $('#carousel-next').click(nextSlide);
+            
+            // 分类筛选
+            $('.category-btn').click(function() {
+                $('.category-btn').removeClass('active bg-primary text-white shadow-md shadow-primary/20')
+                                  .addClass('bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700');
+                $(this).addClass('active bg-primary text-white shadow-md shadow-primary/20')
+                       .removeClass('bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700');
+                const category = $(this).data('category');
+                filterVideosByCategory(category);
+            });
+            
+            // 排序
+            $('#sort-popular').click(function() {
+                $(this).addClass('bg-primary text-white shadow-md shadow-primary/20')
+                       .removeClass('bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700');
+                $('#sort-latest').removeClass('bg-primary text-white shadow-md shadow-primary/20')
+                                 .addClass('bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700');
+                sortVideos('popular');
+            });
+            
+            $('#sort-latest').click(function() {
+                $(this).addClass('bg-primary text-white shadow-md shadow-primary/20')
+                       .removeClass('bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700');
+                $('#sort-popular').removeClass('bg-primary text-white shadow-md shadow-primary/20')
+                                 .addClass('bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700');
+                sortVideos('latest');
+            });
+            
+            // 加载更多
+            $('#load-more').click(loadMoreVideos);
+            
+            // 关闭模态框
+            $('#close-modal').click(function() {
+                closeVideoModal();
+            });
+            
+            // 点击模态框背景关闭
+            $('#video-modal').click(function(e) {
+                if (e.target === this) {
+                    closeVideoModal();
+                }
+            });
+            
+            // 滚动时导航栏效果
+            $(window).scroll(function() {
+                if ($(window).scrollTop() > 50) {
+                    $('header').addClass('py-2 shadow-lg').removeClass('py-3 shadow-md');
+                } else {
+                    $('header').addClass('py-3 shadow-md').removeClass('py-2 shadow-lg');
+                }
+            });
+        }
 
-                        <!-- 加载指示器 -->
-                        <div id="player-loading" class="hidden absolute inset-0 flex items-center justify-center bg-black/50">
-                            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-                        </div>
+        // 主题切换
+        function toggleTheme() {
+            if ($('html').hasClass('dark')) {
+                $('html').removeClass('dark');
+                localStorage.theme = 'light';
+            } else {
+                $('html').addClass('dark');
+                localStorage.theme = 'dark';
+            }
+        }
 
-                        <!-- 错误提示 -->
-                        <div id="player-error" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-6 text-white">
-                            <i class="fa fa-exclamation-triangle text-5xl text-yellow-400 mb-4"></i>
-                            <p class="text-xl mb-2" id="error-message">播放失败</p>
-                            <button id="retry-play" class="mt-4 px-4 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors">
-                                <i class="fa fa-refresh mr-1"></i> 重试
+        // 检查主题偏好
+        function checkThemePreference() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                $('html').addClass('dark');
+            } else {
+                $('html').removeClass('dark');
+            }
+        }
+
+        // 轮播功能
+        let currentSlide = 0;
+        let carouselData = [];
+        
+        function loadCarousel() {
+            // 模拟API请求
+            $.getJSON('/api/carousel', function(data) {
+                if (data.success && data.data.length > 0) {
+                    carouselData = data.data;
+                    renderCarousel();
+                    initCarouselIndicators();
+                    
+                    // 自动轮播
+                    setInterval(nextSlide, 5000);
+                }
+            }).fail(function() {
+                $('#carousel').html(`
+                    <div class="absolute inset-0 flex justify-center items-center bg-gray-200 dark:bg-gray-700">
+                        <p class="text-gray-500">加载轮播失败</p>
+                    </div>
+                `);
+            });
+        }
+        
+        function renderCarousel() {
+            $('#carousel').empty();
+            
+            carouselData.forEach((item, index) => {
+                const slide = $(`
+                    <div class="carousel-slide absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'}" data-index="${index}">
+                        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-6 md:p-10 max-w-2xl">
+                            <span class="px-3 py-1 bg-secondary text-white text-xs rounded-full mb-3 inline-block animate-pulse">${item.category}</span>
+                            <h3 class="text-2xl md:text-4xl font-bold mb-3 text-white text-shadow">${item.title}</h3>
+                            <p class="text-gray-200 mb-6 line-clamp-2 md:line-clamp-3">${item.description}</p>
+                            <button class="play-video-btn bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg flex items-center font-medium transition-all transform hover:scale-105" 
+                                data-id="${item.id}" data-title="${item.title}">
+                                <i class="fa fa-play mr-2"></i> 立即观看
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
+                `);
+                
+                $('#carousel').append(slide);
+            });
+            
+            // 添加轮播控制按钮
+            $('#carousel').append(`
+                <button id="carousel-prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center z-10 transition-all">
+                    <i class="fa fa-chevron-left"></i>
+                </button>
+                <button id="carousel-next" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center z-10 transition-all">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+            `);
+            
+            // 重新绑定轮播事件
+            $('#carousel-prev').click(prevSlide);
+            $('#carousel-next').click(nextSlide);
+            
+            // 添加播放事件
+            $('.play-video-btn').click(function() {
+                const videoId = $(this).data('id');
+                openVideoModal(videoId);
+            });
+        }
+        
+        function initCarouselIndicators() {
+            $('#carousel-indicators').empty();
+            
+            carouselData.forEach((_, index) => {
+                const indicator = $(`
+                    <button class="carousel-indicator w-3 h-3 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50'}" data-index="${index}"></button>
+                `);
+                
+                indicator.click(function() {
+                    currentSlide = parseInt($(this).data('index'));
+                    updateCarousel();
+                });
+                
+                $('#carousel-indicators').append(indicator);
+            });
+            
+            $('#carousel').append($('#carousel-indicators'));
+        }
+        
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + carouselData.length) % carouselData.length;
+            updateCarousel();
+        }
+        
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % carouselData.length;
+            updateCarousel();
+        }
+        
+        function updateCarousel() {
+            $('.carousel-slide').removeClass('opacity-100').addClass('opacity-0');
+            $(`.carousel-slide[data-index="${currentSlide}"]`).removeClass('opacity-0').addClass('opacity-100');
+            
+            $('.carousel-indicator').removeClass('bg-white w-8').addClass('bg-white/50');
+            $(`.carousel-indicator[data-index="${currentSlide}"]`).removeClass('bg-white/50').addClass('bg-white w-8');
+        }
 
-            <!-- 视频详情 -->
-            <div class="bg-white rounded-lg shadow-md p-5">
-                <h2 id="detail-title" class="text-2xl font-bold mb-3"></h2>
-
-                <div class="detail-item">
-                    <span class="detail-label">类型：</span>
-                    <span id="detail-category"></span>
-                </div>
-
-                <div class="detail-item">
-                    <span class="detail-label">地区：</span>
-                    <span id="detail-region"></span>
-                </div>
-
-                <div class="detail-item">
-                    <span class="detail-label">年份：</span>
-                    <span id="detail-year"></span>
-                </div>
-
-                <div class="detail-item">
-                    <span class="detail-label">导演：</span>
-                    <span id="detail-director"></span>
-                </div>
-
-                <div class="detail-item">
-                    <span class="detail-label">主演：</span>
-                    <span id="detail-actors"></span>
-                </div>
-
-                <div class="detail-item">
-                    <span class="detail-label">评分：</span>
-                    <div class="inline-flex items-center">
-                        <span id="detail-rating" class="text-yellow-500 font-medium mr-1"></span>
-                        <div class="text-yellow-500">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star-half-o"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <h3 class="font-bold mb-2">剧情简介</h3>
-                    <p id="detail-description" class="text-gray-700 leading-relaxed"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 列表视图标题 -->
-    <div id="list-view-headers" class="mb-6">
-        <!-- 搜索结果标题 -->
-        <div id="search-result-header" class="hidden">
-            <h2 class="text-2xl font-bold" id="result-title">搜索结果</h2>
-            <p class="text-gray-medium mt-1" id="result-count">找到 <span></span> 个结果</p>
-        </div>
-
-        <!-- 分类标题 -->
-        <div id="category-header">
-            <h2 class="text-2xl font-bold" id="category-title">热门推荐</h2>
-        </div>
-    </div>
-
-    <!-- 视频列表 -->
-    <div id="vod-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        <!-- 视频项将通过JS动态加载 -->
-    </div>
-
-    <!-- 加载中提示 -->
-    <div id="loading" class="hidden flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    </div>
-
-    <!-- 无结果提示 -->
-    <div id="no-results" class="hidden text-center py-12">
-        <i class="fa fa-film text-gray-300 text-5xl mb-4"></i>
-        <p class="text-gray-medium text-lg">没有找到相关视频</p>
-    </div>
-
-    <!-- 分页控件 -->
-    <div id="pagination" class="mt-8 flex justify-center items-center space-x-2 hidden">
-        <button id="prev-page" class="px-4 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-            <i class="fa fa-chevron-left"></i>
-        </button>
-        <span id="page-info" class="px-4 py-2">第 <span></span> 页 / 共 <span></span> 页</span>
-        <button id="next-page" class="px-4 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-            <i class="fa fa-chevron-right"></i>
-        </button>
-    </div>
-</main>
-
-<footer class="bg-dark text-white mt-12 py-8">
-    <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-            <div class="mb-4 md:mb-0">
-                <div class="flex items-center space-x-2">
-                    <i class="fa fa-play-circle text-primary text-2xl"></i>
-                    <h2 class="text-xl font-bold">InnovateX 视频</h2>
-                </div>
-                <p class="text-gray-400 mt-2">提供优质的视频内容服务</p>
-            </div>
-            <div class="flex space-x-6">
-                <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
-                <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
-                <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
-                <a href="#" class="text-gray-400 hover:text-primary transition-colors"><i class="fa fa-youtube-play"></i></a>
-            </div>
-        </div>
-        <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
-            &copy; 2023 InnovateX 视频平台. 保留所有权利.
-        </div>
-    </div>
-</footer>
-
-<script>
-    // 全局状态
-    const state = {
-        currentPage: 1,
-        totalPages: 0,
-        totalItems: 0,
-        currentSearch: '',
-        currentCategory: 'all', // 当前分类，默认为全部
-        isLoading: false,
-        currentVideoId: null,
-        allVideosInfo: {}, // 存储所有已加载的视频信息，从search接口获取
-        hls: null, // HLS实例
-        isPlaying: false
-    };
-
-    // DOM 元素
-    const elements = {
-        // 通用元素
-        backContainer: document.getElementById('back-container'),
-        backBtn: document.getElementById('back-btn'),
-        playView: document.getElementById('play-view'),
-        listViewHeaders: document.getElementById('list-view-headers'),
-
-        // 搜索相关
-        searchInput: document.getElementById('search-input'),
-        searchBtn: document.getElementById('search-btn'),
-        mobileSearchBtn: document.getElementById('mobile-search-btn'),
-        mobileSearch: document.getElementById('mobile-search'),
-        mobileSearchInput: document.getElementById('mobile-search-input'),
-        mobileSearchSubmit: document.getElementById('mobile-search-submit'),
-
-        // 视频列表相关
-        vodList: document.getElementById('vod-list'),
-        loading: document.getElementById('loading'),
-        noResults: document.getElementById('no-results'),
-        searchResultHeader: document.getElementById('search-result-header'),
-        resultTitle: document.getElementById('result-title'),
-        resultCount: document.getElementById('result-count'),
-        categoryHeader: document.getElementById('category-header'),
-        categoryTitle: document.getElementById('category-title'),
-
-        // 分页相关
-        pagination: document.getElementById('pagination'),
-        prevPage: document.getElementById('prev-page'),
-        nextPage: document.getElementById('next-page'),
-        pageInfo: document.getElementById('page-info'),
-
-        // 播放器相关
-        videoPlayer: document.getElementById('video-player'),
-        playerLoading: document.getElementById('player-loading'),
-        playerError: document.getElementById('player-error'),
-        errorMessage: document.getElementById('error-message'),
-        retryPlay: document.getElementById('retry-play'),
-
-        // 详情相关
-        detailTitle: document.getElementById('detail-title'),
-        detailCategory: document.getElementById('detail-category'),
-        detailRegion: document.getElementById('detail-region'),
-        detailYear: document.getElementById('detail-year'),
-        detailDirector: document.getElementById('detail-director'),
-        detailActors: document.getElementById('detail-actors'),
-        detailRating: document.getElementById('detail-rating'),
-        detailDescription: document.getElementById('detail-description'),
-
-        // 分类标签
-        navTabs: document.querySelectorAll('.nav-tab')
-    };
-
-    // 分类名称映射
-    const categoryNames = {
-        'all': '热门推荐',
-        'movie': '电影',
-        'series': '剧集',
-        'anime': '动漫',
-        'documentary': '纪录片',
-        'variety': '综艺'
-    };
-
-    // 初始化事件监听
-    function initEventListeners() {
-        // 返回按钮事件
-        elements.backBtn.addEventListener('click', returnToListView);
-
-        // 搜索相关
-        elements.searchBtn.addEventListener('click', () => handleSearch(elements.searchInput.value));
-        elements.searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch(elements.searchInput.value);
-        });
-
-        elements.mobileSearchBtn.addEventListener('click', () => {
-            elements.mobileSearch.classList.toggle('hidden');
-        });
-
-        elements.mobileSearchSubmit.addEventListener('click', () => {
-            handleSearch(elements.mobileSearchInput.value);
-            elements.mobileSearch.classList.add('hidden');
-        });
-
-        elements.mobileSearchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSearch(elements.mobileSearchInput.value);
-                elements.mobileSearch.classList.add('hidden');
-            }
-        });
-
-        // 分页相关
-        elements.prevPage.addEventListener('click', () => {
-            if (state.currentPage > 1) {
-                state.currentPage--;
-                fetchVodList();
-            }
-        });
-
-        elements.nextPage.addEventListener('click', () => {
-            if (state.currentPage < state.totalPages) {
-                state.currentPage++;
-                fetchVodList();
-            }
-        });
-
-        // 播放器相关
-        elements.retryPlay.addEventListener('click', () => {
-            if (state.currentVideoId) {
-                playVod(state.currentVideoId);
-            }
-        });
-
-        // 视频事件监听
-        elements.videoPlayer.addEventListener('ended', () => {
-            state.isPlaying = false;
-        });
-
-        elements.videoPlayer.addEventListener('play', () => {
-            state.isPlaying = true;
-        });
-
-        elements.videoPlayer.addEventListener('pause', () => {
-            state.isPlaying = false;
-        });
-
-        // 分类标签点击事件
-        elements.navTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const category = tab.getAttribute('data-category');
-                if (category !== state.currentCategory) {
-                    // 切换到列表视图
-                    returnToListView();
-
-                    // 更新当前分类
-                    state.currentCategory = category;
-                    state.currentPage = 1; // 重置到第一页
-                    state.currentSearch = ''; // 清空搜索词
-
-                    // 同步搜索框
-                    elements.searchInput.value = '';
-                    elements.mobileSearchInput.value = '';
-
-                    // 清空已存储的视频信息
-                    state.allVideosInfo = {};
-
-                    // 更新标签样式
-                    updateActiveTab();
-
-                    // 获取对应分类的视频列表
-                    fetchVodList();
+        // 加载热门视频
+        function loadFeaturedVideos() {
+            // 模拟API请求
+            $.getJSON('/api/featured', function(data) {
+                if (data.success && data.data.length > 0) {
+                    let html = '';
+                    data.data.forEach(video => {
+                        html += `
+                            <div class="video-card card-hover group">
+                                <div class="relative rounded-xl overflow-hidden aspect-[2/3] mb-3">
+                                    <img src="${video.poster}" alt="${video.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end">
+                                        <div class="p-3 w-full">
+                                            <div class="flex justify-between items-center">
+                                                <span class="bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur">${video.duration}</span>
+                                                <div class="flex space-x-1">
+                                                    <button class="w-7 h-7 bg-black/70 hover:bg-primary text-white rounded-full flex items-center justify-center transition-colors">
+                                                        <i class="fa fa-heart-o text-xs"></i>
+                                                    </button>
+                                                    <button class="w-7 h-7 bg-black/70 hover:bg-primary text-white rounded-full flex items-center justify-center transition-colors">
+                                                        <i class="fa fa-play text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ${video.badge ? `<span class="absolute top-3 left-3 bg-secondary text-white text-xs px-2 py-1 rounded-full">${video.badge}</span>` : ''}
+                                    <button class="play-video-btn absolute inset-0" data-id="${video.id}" data-title="${video.title}"></button>
+                                </div>
+                                <h3 class="font-medium line-clamp-1 group-hover:text-primary transition-colors">${video.title}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                                    <span>${video.year}</span>
+                                    <span class="mx-1">•</span>
+                                    <span>${video.category}</span>
+                                    <span class="mx-1">•</span>
+                                    <span class="flex items-center"><i class="fa fa-star text-yellow-500 text-xs mr-1"></i>${video.rating}</span>
+                                </p>
+                            </div>
+                        `;
+                    });
+                    $('#featured-videos').parent().html(html);
+                    
+                    // 添加播放事件
+                    $('.play-video-btn').click(function() {
+                        const videoId = $(this).data('id');
+                        openVideoModal(videoId);
+                    });
                 }
+            }).fail(function() {
+                $('#featured-videos').parent().html(`
+                    <div class="col-span-full flex justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                        <p class="text-gray-500">加载热门视频失败</p>
+                    </div>
+                `);
             });
-        });
-    }
-
-    // 切换到列表视图
-    function returnToListView() {
-        // 清理播放器
-        cleanupPlayer();
-
-        // 更新视图
-        elements.playView.classList.add('hidden');
-        elements.backContainer.classList.add('hidden');
-        elements.listViewHeaders.classList.remove('hidden');
-        elements.vodList.classList.remove('hidden');
-        elements.pagination.classList.remove('hidden');
-
-        // 重置当前视频ID
-        state.currentVideoId = null;
-    }
-
-    // 切换到播放视图
-    function switchToPlayView() {
-        elements.playView.classList.remove('hidden');
-        elements.backContainer.classList.remove('hidden');
-        elements.listViewHeaders.classList.add('hidden');
-        elements.vodList.classList.add('hidden');
-        elements.pagination.classList.add('hidden');
-        elements.noResults.classList.add('hidden');
-    }
-
-    // 更新激活的标签样式
-    function updateActiveTab() {
-        elements.navTabs.forEach(tab => {
-            if (tab.getAttribute('data-category') === state.currentCategory) {
-                tab.classList.add('active');
-            } else {
-                tab.classList.remove('active');
-            }
-        });
-    }
-
-    // 处理搜索
-    function handleSearch(query) {
-        // 如果在播放视图，先返回列表视图
-        if (state.currentVideoId) {
-            returnToListView();
         }
 
-        state.currentSearch = query.trim();
-        state.currentPage = 1; // 重置到第一页
-        state.allVideosInfo = {}; // 清空已存储的视频信息
-
-        // 如果有搜索词，隐藏分类标题，显示搜索结果标题
-        if (state.currentSearch) {
-            elements.categoryHeader.classList.add('hidden');
-            elements.searchResultHeader.classList.remove('hidden');
-        } else {
-            // 没有搜索词，显示分类标题，隐藏搜索结果标题
-            elements.categoryHeader.classList.remove('hidden');
-            elements.searchResultHeader.classList.add('hidden');
-        }
-
-        fetchVodList();
-    }
-
-    // 获取视频列表 - 生成不同分类的查询接口
-    async function fetchVodList() {
-        if (state.isLoading) return;
-
-        state.isLoading = true;
-        updateUI();
-
-        try {
-            // 构建请求URL，根据分类和搜索词生成不同的查询参数
-            let url = `/vod/search?page=${state.currentPage}`;
-
-            // 添加分类参数
-            if (state.currentCategory && state.currentCategory !== 'all') {
-                url += `&category=${state.currentCategory}`;
-            }
-
-            // 添加搜索词参数
-            if (state.currentSearch) {
-                url += `&wd=${encodeURIComponent(state.currentSearch)}`;
-            }
-
-            console.log('请求视频列表接口:', url);
-
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            // 更新状态
-            state.totalPages = data.pagecount || 0;
-            state.totalItems = data.total || 0;
-
-            // 存储视频信息到全局状态
-            (data.list || []).forEach(item => {
-                state.allVideosInfo[item.vod_id] = item;
-            });
-
-            // 渲染视频列表
-            renderVodList(data.list || []);
-
-        } catch (error) {
-            console.error('获取视频列表失败:', error);
-            elements.vodList.innerHTML = `
-                    <div class="col-span-full text-center py-12">
-                        <i class="fa fa-exclamation-triangle text-yellow-500 text-3xl mb-2"></i>
-                        <p>加载失败，请稍后重试</p>
-                    </div>
-                `;
-        } finally {
-            state.isLoading = false;
-            updateUI();
-        }
-    }
-
-    // 渲染视频列表
-    function renderVodList(items) {
-        if (items.length === 0) {
-            elements.noResults.classList.remove('hidden');
-            elements.vodList.innerHTML = '';
-            return;
-        }
-
-        elements.noResults.classList.add('hidden');
-        elements.vodList.innerHTML = items.map(item => {
-            // 获取视频封面图URL
-            const picUrl = item.vod_pic || `https://picsum.photos/seed/${item.vod_id}/300/450`;
-
-            return `
-                <div class="bg-white rounded-lg overflow-hidden shadow card-hover" data-id="${item.vod_id}">
-                    <div class="video-container">
-                        <img src="${picUrl}"
-                             alt="${item.vod_name}"
-                             class="video-pic"
-                             onload="this.classList.add('loaded')"
-                             onerror="this.src='https://picsum.photos/seed/${item.vod_id}/300/450'; this.classList.add('loaded')">
-                        <div class="pic-placeholder">
-                            <i class="fa fa-film text-gray-400 text-2xl"></i>
-                        </div>
-                        <div class="absolute top-2 right-2 bg-primary/90 text-white text-xs px-2 py-1 rounded z-10">
-                            ${item.type_name || '未知类型'}
-                        </div>
-                        <button class="play-btn absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity z-10"
-                                data-id="${item.vod_id}">
-                            <i class="fa fa-play-circle text-white text-4xl"></i>
-                        </button>
-                    </div>
-                    <div class="p-3">
-                        <h3 class="font-medium truncate" title="${item.vod_name}">${item.vod_name}</h3>
-                        <p class="text-gray-medium text-sm mt-1 truncate">${item.vod_en || '无英文名'}</p>
-                        ${item.vod_remarks ? `<p class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded mt-2 inline-block">${item.vod_remarks}</p>` : ''}
-                    </div>
+        // 加载视频列表
+        function loadVideoList(page = 1, category = 'all', searchQuery = '') {
+            // 显示加载状态
+            $('#video-grid').html(`
+                <div class="col-span-full flex justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                    <i class="fa fa-spinner fa-spin text-4xl text-gray-400 animate-pulse-slow"></i>
                 </div>
-            `;
-        }).join('');
-
-        // 为播放按钮添加事件监听
-        document.querySelectorAll('.play-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = btn.getAttribute('data-id');
-                playVod(id);
-            });
-        });
-
-        // 为卡片添加点击事件
-        document.querySelectorAll('#vod-list > div').forEach(card => {
-            card.addEventListener('click', () => {
-                const id = card.getAttribute('data-id');
-                playVod(id);
-            });
-        });
-    }
-
-    // 渲染视频详情 - 直接从search接口返回的数据中获取
-    function renderVideoDetail(videoId) {
-        const detail = state.allVideosInfo[videoId] || {};
-
-        elements.detailTitle.textContent = detail.vod_name || '未知视频';
-        elements.detailCategory.textContent = detail.type_name || '未知类型';
-        elements.detailRegion.textContent = detail.vod_area || '未知地区';
-        elements.detailYear.textContent = detail.vod_year || '未知年份';
-        elements.detailDirector.textContent = detail.vod_director || '未知';
-        elements.detailActors.textContent = detail.vod_actor || '未知';
-        elements.detailRating.textContent = detail.vod_score || '暂无评分';
-        elements.detailDescription.textContent = detail.vod_content || '暂无剧情介绍';
-
-        return detail;
-    }
-
-    // 清理HLS播放器
-    function cleanupPlayer() {
-        if (state.hls) {
-            state.hls.destroy();
-            state.hls = null;
-        }
-        elements.videoPlayer.pause();
-        elements.videoPlayer.src = '';
-    }
-
-    // 播放视频
-    async function playVod(videoId) {
-        // 检查是否有该视频的信息
-        if (!state.allVideosInfo[videoId]) {
-            console.error('没有找到该视频的信息');
-            alert('无法获取视频信息，请重试');
-            return;
-        }
-
-        // 显示加载状态
-        elements.playerLoading.classList.remove('hidden');
-        elements.playerError.classList.add('hidden');
-
-        // 保存当前视频ID
-        state.currentVideoId = videoId;
-
-        // 清理之前的播放实例
-        cleanupPlayer();
-
-        try {
-            // 获取播放地址
-            const playUrlResponse = await fetch(`/vod/play?ids=${videoId}`);
-            if (!playUrlResponse.ok) {
-                throw new Error(`获取播放地址失败: ${playUrlResponse.status}`);
-            }
-
-            const playUrl = await playUrlResponse.text();
-            console.log('播放地址:', playUrl);
-
-            // 从已存储的信息中渲染视频详情
-            const videoInfo = renderVideoDetail(videoId);
-
-            // 切换到播放视图
-            switchToPlayView();
-
-            // 设置视频封面
-            const posterUrl = videoInfo.vod_pic || `https://picsum.photos/seed/${videoId}/800/450`;
-            elements.videoPlayer.poster = posterUrl;
-
-            // 检查是否是m3u8格式
-            if (playUrl.includes('.m3u8')) {
-                // 使用HLS.js播放m3u8
-                if (Hls.isSupported()) {
-                    state.hls = new Hls({
-                        maxBufferLength: 30,
-                        maxMaxBufferLength: 600,
-                        startLevel: -1 // 自动选择适合的清晰度
+            `);
+            
+            // 构建API请求URL
+            let url = `/api/videos?page=${page}`;
+            if (category !== 'all') url += `&category=${category}`;
+            if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+            
+            // 模拟API请求
+            $.getJSON(url, function(data) {
+                if (data.success && data.data.length > 0) {
+                    let html = '';
+                    data.data.forEach(video => {
+                        html += `
+                            <div class="video-card card-hover group">
+                                <div class="relative rounded-xl overflow-hidden aspect-[2/3] mb-3">
+                                    <img src="${video.poster}" alt="${video.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end">
+                                        <div class="p-3 w-full">
+                                            <div class="flex justify-between items-center">
+                                                <span class="bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur">${video.duration}</span>
+                                                <div class="flex space-x-1">
+                                                    <button class="w-7 h-7 bg-black/70 hover:bg-primary text-white rounded-full flex items-center justify-center transition-colors">
+                                                        <i class="fa fa-heart-o text-xs"></i>
+                                                    </button>
+                                                    <button class="w-7 h-7 bg-black/70 hover:bg-primary text-white rounded-full flex items-center justify-center transition-colors">
+                                                        <i class="fa fa-play text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ${video.badge ? `<span class="absolute top-3 left-3 bg-secondary text-white text-xs px-2 py-1 rounded-full">${video.badge}</span>` : ''}
+                                    <button class="play-video-btn absolute inset-0" data-id="${video.id}" data-title="${video.title}"></button>
+                                </div>
+                                <h3 class="font-medium line-clamp-1 group-hover:text-primary transition-colors">${video.title}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                                    <span>${video.year}</span>
+                                    <span class="mx-1">•</span>
+                                    <span>${video.category}</span>
+                                    <span class="mx-1">•</span>
+                                    <span class="flex items-center"><i class="fa fa-star text-yellow-500 text-xs mr-1"></i>${video.rating}</span>
+                                </p>
+                            </div>
+                        `;
                     });
-
-                    state.hls.loadSource(playUrl);
-                    state.hls.attachMedia(elements.videoPlayer);
-
-                    state.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        console.log('视频清单解析完成，准备播放');
-                        elements.playerLoading.classList.add('hidden');
-                        elements.videoPlayer.play().catch(err => {
-                            console.warn('自动播放失败，可能是浏览器限制:', err);
-                        });
+                    $('#video-grid').html(html);
+                    
+                    // 添加播放事件
+                    $('.play-video-btn').click(function() {
+                        const videoId = $(this).data('id');
+                        openVideoModal(videoId);
                     });
-
-                    state.hls.on(Hls.Events.ERROR, (event, data) => {
-                        console.error('HLS错误:', data);
-                        elements.playerLoading.classList.add('hidden');
-
-                        if (data.fatal) {
-                            switch(data.type) {
-                                case Hls.ErrorTypes.NETWORK_ERROR:
-                                    elements.errorMessage.textContent = '网络错误，正在尝试重新连接...';
-                                    elements.playerError.classList.remove('hidden');
-                                    state.hls.startLoad();
-                                    break;
-                                case Hls.ErrorTypes.MEDIA_ERROR:
-                                    elements.errorMessage.textContent = '媒体解码错误，正在尝试恢复...';
-                                    elements.playerError.classList.remove('hidden');
-                                    state.hls.recoverMediaError();
-                                    break;
-                                default:
-                                    elements.errorMessage.textContent = `播放失败: ${data.details || '未知错误'}`;
-                                    elements.playerError.classList.remove('hidden');
-                                    cleanupPlayer();
-                                    break;
-                            }
-                        }
-                    });
-                } else if (elements.videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Safari直接支持HLS
-                    elements.videoPlayer.src = playUrl;
-                    elements.videoPlayer.addEventListener('loadedmetadata', () => {
-                        elements.playerLoading.classList.add('hidden');
-                        elements.videoPlayer.play().catch(err => {
-                            console.warn('自动播放失败:', err);
-                        });
-                    });
+                    
+                    // 显示或隐藏加载更多按钮
+                    if (data.hasMore) {
+                        $('#load-more').show();
+                    } else {
+                        $('#load-more').hide();
+                    }
                 } else {
-                    throw new Error('您的浏览器不支持m3u8视频播放');
+                    $('#video-grid').html(`
+                        <div class="col-span-full flex flex-col justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                            <i class="fa fa-film text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">没有找到相关视频</p>
+                        </div>
+                    `);
+                    $('#load-more').hide();
                 }
-            } else {
-                // 非m3u8格式，直接播放
-                elements.videoPlayer.src = playUrl;
-                elements.videoPlayer.addEventListener('loadedmetadata', () => {
-                    elements.playerLoading.classList.add('hidden');
-                    elements.videoPlayer.play().catch(err => {
-                        console.warn('自动播放失败:', err);
+            }).fail(function() {
+                $('#video-grid').html(`
+                    <div class="col-span-full flex justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                        <p class="text-gray-500">加载视频失败</p>
+                    </div>
+                `);
+            });
+        }
+
+        // 打开视频播放模态框
+        function openVideoModal(videoId) {
+            // 显示加载状态
+            $('#modal-title').text('加载中...');
+            $('#modal-desc').text('');
+            $('#modal-category').text('');
+            $('#modal-year').text('');
+            $('#modal-rating span').text('');
+            $('#modal-duration span').text('');
+            $('#episodes-container').html(`
+                <div class="col-span-full flex justify-center items-center h-40">
+                    <i class="fa fa-spinner fa-spin text-xl text-gray-400"></i>
+                </div>
+            `);
+            $('#video-player').attr('src', '');
+            $('#video-modal').show();
+            
+            // 模态框动画
+            setTimeout(() => {
+                $('#modal-content').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
+            }, 50);
+            
+            // 禁止背景滚动
+            $('body').css('overflow', 'hidden');
+            
+            // 获取视频详情
+            $.getJSON(`/api/video/${videoId}`, function(data) {
+                if (data.success) {
+                    const video = data.data;
+                    $('#modal-title').text(video.title);
+                    $('#modal-desc').text(video.description);
+                    $('#modal-category').text(video.category);
+                    $('#modal-year').text(video.year);
+                    $('#modal-rating span').text(video.rating);
+                    $('#modal-duration span').text(video.duration);
+                    $('#episodes-count').text(`共 ${video.episodes.length} 集`);
+                    
+                    // 设置第一个播放源
+                    if (video.episodes && video.episodes.length > 0) {
+                        $('#video-player').attr('src', video.episodes[0].url);
+                        
+                        // 加载剧集列表
+                        let episodesHtml = '';
+                        video.episodes.forEach((episode, index) => {
+                            episodesHtml += `
+                                <button class="episode-btn px-3 py-2 bg-gray-700 hover:bg-primary text-white rounded-lg text-sm font-medium ${index === 0 ? 'bg-primary' : ''} transition-all"
+                                    data-url="${episode.url}">
+                                    ${episode.name || `第${index + 1}集`}
+                                </button>
+                            `;
+                        });
+                        $('#episodes-container').html(episodesHtml);
+                        
+                        // 剧集切换事件
+                        $('.episode-btn').click(function() {
+                            $('.episode-btn').removeClass('bg-primary').addClass('bg-gray-700');
+                            $(this).addClass('bg-primary').removeClass('bg-gray-700');
+                            const url = $(this).data('url');
+                            $('#video-player').attr('src', url).get(0).play();
+                        });
+                    }
+                } else {
+                    $('#modal-title').text('出错了');
+                    $('#modal-desc').text('无法加载视频详情');
+                }
+            }).fail(function() {
+                $('#modal-title').text('出错了');
+                $('#modal-desc').text('加载视频详情失败');
+            });
+        }
+        
+        // 关闭视频模态框
+        function closeVideoModal() {
+            $('#modal-content').removeClass('scale-100 opacity-100').addClass('scale-95 opacity-0');
+            
+            setTimeout(() => {
+                $('#video-modal').hide();
+                $('#video-player').get(0).pause();
+                // 恢复背景滚动
+                $('body').css('overflow', 'auto');
+            }, 300);
+        }
+
+        // 筛选视频分类
+        function filterVideosByCategory(category) {
+            loadVideoList(1, category);
+        }
+
+        // 排序视频
+        function sortVideos(type) {
+            loadVideoList(1, $('.category-btn.active').data('category'));
+        }
+
+        // 执行搜索
+        function performSearch() {
+            const query = $('#search-input').val() || $('#mobile-search-input').val();
+            if (query) {
+                loadVideoList(1, 'all', query);
+                // 关闭移动端菜单（如果打开）
+                $('#mobile-menu').hide();
+            }
+        }
+
+        // 加载更多视频
+        let currentPage = 1;
+        function loadMoreVideos() {
+            currentPage++;
+            const category = $('.category-btn.active').data('category');
+            const searchQuery = $('#search-input').val() || $('#mobile-search-input').val() || '';
+            
+            // 显示加载状态
+            $('#load-more').html('<i class="fa fa-spinner fa-spin mr-2"></i> 加载中...');
+            
+            // 构建API请求URL
+            let url = `/api/videos?page=${currentPage}`;
+            if (category !== 'all') url += `&category=${category}`;
+            if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+            
+            // 模拟API请求
+            $.getJSON(url, function(data) {
+                if (data.success && data.data.length > 0) {
+                    let html = $('#video-grid').html();
+                    data.data.forEach(video => {
+                        html += `
+                            <div class="video-card card-hover group">
+                                <div class="relative rounded-xl overflow-hidden aspect-[2/3] mb-3">
+                                    <img src="${video.poster}" alt="${video.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end">
+                                        <div class="p-3 w-full">
+                                            <div class="flex justify-between items-center">
+                                                <span class="bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur">${video.duration}</span>
+                                                <div class="flex space-x-1">
+                                                    <button class="w-7 h-7 bg-black/70 hover:bg-primary text-white rounded-full flex items-center justify-center transition-colors">
+                                                        <i class="fa fa-heart-o text-xs"></i>
+                                                    </button>
+                                                    <button class="w-7 h-7 bg-black/70 hover:bg-primary text-white rounded-full flex items-center justify-center transition-colors">
+                                                        <i class="fa fa-play text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ${video.badge ? `<span class="absolute top-3 left-3 bg-secondary text-white text-xs px-2 py-1 rounded-full">${video.badge}</span>` : ''}
+                                    <button class="play-video-btn absolute inset-0" data-id="${video.id}" data-title="${video.title}"></button>
+                                </div>
+                                <h3 class="font-medium line-clamp-1 group-hover:text-primary transition-colors">${video.title}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                                    <span>${video.year}</span>
+                                    <span class="mx-1">•</span>
+                                    <span>${video.category}</span>
+                                    <span class="mx-1">•</span>
+                                    <span class="flex items-center"><i class="fa fa-star text-yellow-500 text-xs mr-1"></i>${video.rating}</span>
+                                </p>
+                            </div>
+                        `;
                     });
-                });
-
-                elements.videoPlayer.addEventListener('error', (err) => {
-                    console.error('视频播放错误:', err);
-                    elements.playerLoading.classList.add('hidden');
-                    elements.errorMessage.textContent = `播放失败: 视频无法加载`;
-                    elements.playerError.classList.remove('hidden');
-                });
-            }
-
-        } catch (error) {
-            console.error('播放视频失败:', error);
-            elements.playerLoading.classList.add('hidden');
-            elements.errorMessage.textContent = `播放失败: ${error.message}`;
-            elements.playerError.classList.remove('hidden');
-            // 确保播放视图已显示
-            switchToPlayView();
+                    $('#video-grid').html(html);
+                    
+                    // 添加播放事件
+                    $('.play-video-btn').click(function() {
+                        const videoId = $(this).data('id');
+                        openVideoModal(videoId);
+                    });
+                    
+                    // 恢复按钮文本
+                    $('#load-more').html('<span>加载更多</span><i class="fa fa-refresh ml-2"></i>');
+                    
+                    // 如果没有更多数据，隐藏加载更多按钮
+                    if (!data.hasMore) {
+                        $('#load-more').hide();
+                    }
+                } else {
+                    // 没有更多数据
+                    $('#load-more').hide();
+                }
+            }).fail(function() {
+                // 加载失败，恢复按钮文本
+                $('#load-more').html('<span>加载更多</span><i class="fa fa-refresh ml-2"></i>');
+                currentPage--; // 减少页码，以便用户可以重试
+            });
         }
-    }
-
-    // 更新UI状态
-    function updateUI() {
-        // 更新分类标题
-        elements.categoryTitle.textContent = categoryNames[state.currentCategory] || '视频内容';
-
-        // 加载状态
-        if (state.isLoading) {
-            elements.loading.classList.remove('hidden');
-            elements.vodList.classList.add('hidden');
-            elements.pagination.classList.add('hidden');
-        } else {
-            elements.loading.classList.add('hidden');
-            elements.vodList.classList.remove('hidden');
-
-            // 更新搜索结果计数
-            elements.resultCount.querySelector('span').textContent = state.totalItems;
-            if (state.currentSearch) {
-                elements.resultTitle.textContent = `"${state.currentSearch}" 的搜索结果`;
-            }
-
-            // 更新分页
-            if (state.totalPages > 1) {
-                elements.pagination.classList.remove('hidden');
-                elements.pageInfo.querySelectorAll('span')[0].textContent = state.currentPage;
-                elements.pageInfo.querySelectorAll('span')[1].textContent = state.totalPages;
-
-                elements.prevPage.disabled = state.currentPage <= 1;
-                elements.nextPage.disabled = state.currentPage >= state.totalPages;
-            } else {
-                elements.pagination.classList.add('hidden');
-            }
-        }
-    }
-
-    // 初始化页面
-    function init() {
-        initEventListeners();
-        updateActiveTab(); // 设置初始激活的标签
-        // 初始加载第一页热门视频
-        fetchVodList();
-    }
-
-    // 页面加载完成后初始化
-    document.addEventListener('DOMContentLoaded', init);
-</script>
+    </script>
 </body>
 </html>
