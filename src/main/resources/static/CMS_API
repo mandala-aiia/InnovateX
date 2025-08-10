@@ -1,0 +1,44 @@
+苹果CMS V10 内置API接口
+影片接口
+url：/api.php/provide/vod/
+可用于获取分类、列表和详情
+
+
+ac：模式（videolist或detail详细模式），为空＝列表标准模式
+ids: 影片id，多个使用,隔开
+t: 类型
+h：最近多少小时内
+pg: 页数
+wd：搜索like
+at：输出格式，可选xml
+
+
+示例
+取最新列表带分类
+/api.php/provide/vod/
+取详细列表不带分类
+/api.php/provide/vod/?ac=videolist
+取特定分类
+/api.php/provide/vod/?ac=videolist&t=2
+取某影片数据
+/api.php/provide/vod/?ac=videolist&ids=33317
+
+
+资讯接口
+url：/api.php/provide/art/
+ac：模式，detail是详细
+ids: 影片id，多个使用,隔开
+t: 类型
+h：最近多少小时内
+pg: 页数
+wd：搜索like
+
+
+明星列表
+url：/api.php/provide/actor
+ac：模式，detail是详细
+ids: 影片id，多个使用,隔开
+t: 类型
+h：最近多少小时内
+pg: 页数
+wd：搜索like
