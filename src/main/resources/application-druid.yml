@@ -1,9 +1,9 @@
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://ip:port/innovatex?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username:
-    password:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://122.51.181.159:5432/alex
+    username: alex
+    password: Password110
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5  #初始连接数
@@ -15,7 +15,7 @@ spring:
       time-between-eviction-runs-millis: 60000 # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
       min-evictable-idle-time-millis: 300000 # 配置一个连接在池中最小生存的时间，单位是毫秒
       max-evictable-idle-time-millis: 900000 # 配置一个连接在池中最大生存的时间，单位是毫秒
-      validation-query: select 1 from dual  # 配置检测连接是否有效
+      validation-query: select 1  # 配置检测连接是否有效
       test-while-idle: on  # 应用向连接池申请连接，并且testOnBorrow为false时，连接池将会判断连接是否处于空闲状态，如果是，则验证这条连接是否可用
       test-on-borrow: off # 如果为true，默认是false，应用向连接池申请连接时，连接池会判断这条连接是否是可用的
       test-on-return: off # 如果为true（默认false），当应用使用完连接，连接池回收连接的时候会判断该连接是否还可用
@@ -26,7 +26,7 @@ spring:
       filter:
         stat:
           enabled: on   # 开启DruidDatasource的状态监控
-          db-type: mysql
+          db-type: postgresql
           log-slow-sql: on   # 开启慢sql监控，超过2s 就认为是慢sql，记录到日志中
           slow-sql-millis: 2000
         wall:
