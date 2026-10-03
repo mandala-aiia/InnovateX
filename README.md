@@ -9,17 +9,29 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 
 ### Netty 网络编程（`com.alec.InnovateX.netty`）
 
-每个 demo 都是独立 main 类，手动运行：
+按主题子包组织。`codec`/`core` 中标"无端口"的 demo 基于 EmbeddedChannel（由 `CodecTest`/`NettyCoreTest` 自动验证），其余为独立 main 类，手动运行：
 
-| Demo | 说明 |
-|---|---|
-| `EchoServer`/`EchoClient` | TCP Echo（FixedLengthFrameDecoder 拆包） |
-| `NIOServer`/`NIOClient` | JDK 原生 NIO Selector |
-| `UdpServer`/`UdpClient` | UDP DatagramPacket |
-| `WebSocketServer`/`WebSocketClient` | WebSocket（端口 8080） |
-| `MqttServer`/`MqttServerHandler`/`MqttSessionManager` | 手写 MQTT Broker（端口 1883）：CONNECT/SUBSCRIBE/PUBLISH/DISCONNECT + 内存会话管理 |
-| `HttpFileServer` | HTTP 静态文件服务器（零拷贝 DefaultFileRegion） |
-| `FileUploadServer`/`FileUploadClient` | TCP 文件上传（端口 9000） |
+| 子包 | Demo | 说明 |
+|---|---|---|
+| `netty.baseline` | `EchoServer`/`EchoClient` | TCP Echo（FixedLengthFrameDecoder 定长拆包） |
+| | `NIOServer`/`NIOClient` | JDK 原生 NIO Selector（对照组） |
+| | `UdpServer`/`UdpClient` | UDP DatagramPacket |
+| `netty.codec` | `LineBasedCodecDemo` | 换行符拆包（无端口） |
+| | `DelimiterCodecDemo` | 自定义分隔符拆包（无端口） |
+| | `LengthFieldCodecDemo` | 长度字段拆包：Prepender+Decoder 参数详解、粘包证明（无端口） |
+| | `CustomCodecDemo` | 自定义协议编解码：魔数/半包重试/粘包 + `ReplayingDecoder` 对照（无端口） |
+| `netty.core` | `PipelineOrderDemo` | 入站/出站传播顺序、ctx.write vs channel.write（无端口） |
+| | `IdleStateDemo` | IdleStateHandler 心跳检测（无端口） |
+| | `ByteBufDemo` | 堆/直接内存、slice/duplicate/copy、引用计数（无端口） |
+| | `FuturePromiseDemo` | Future/Promise、sync vs await（无端口） |
+| | `ReactorModelDemo` | 单线程/多线程/主从 Reactor 三模型对照（8101-8103） |
+| | `BusinessThreadDemo` | addLast(businessGroup, handler) 业务线程隔离（8200） |
+| | `TcpParamDemo` | SO_BACKLOG/TCP_NODELAY/水位线与背压（8400，限速演示） |
+| | `SharableHandlerDemo` | @Sharable 单例 handler 复用 vs 非 @Sharable 拒绝复用（无端口） |
+| `netty.protocol` | `WebSocketServer`/`WebSocketClient` | WebSocket（8080） |
+| | `MqttServer`/`MqttServerHandler`/`MqttSessionManager` | 手写 MQTT Broker（1883）：CONNECT/SUBSCRIBE/PUBLISH/DISCONNECT、**+/# 通配符订阅、QoS1 PUBACK、RETAINED 保留消息、PINGREQ 心跳**、内存会话管理（由 `MqttBrokerTest` 全流程自动验证） |
+| | `HttpFileServer` | HTTP 静态文件服务器（8080，零拷贝 DefaultFileRegion） |
+| | `FileUploadServer`/`FileUploadClient` | TCP 文件上传（9000） |
 
 ### Spring 底层机制（`com.alec.InnovateX.spring`）
 
@@ -34,6 +46,7 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 | `spring.scope` | 作用域：singleton/prototype、作用域代理、自定义 ThreadScope、循环依赖失败示例、@Lazy 打破循环、三级缓存早期引用验证 | `CircleA/B/C`（setter 循环依赖） | `ScopeTest` |
 | `spring.aop` | AOP 深度：@AspectJ 五种通知、JDK vs CGLIB 对比、编程式 ProxyFactory、within/target/args/bean 切点、自调用失效与 currentProxy 修复、@DeclareParents 引介增强、Advised 动态增删通知、多切面 @Order 洋葱模型 | `AppAspect`、`AppPointcut`、`AppAnnotation`+`AppAnnotationAspect`（XML 五通知+注解切面） | `AopDeepTest` |
 | `spring.transaction` | 事务深度（H2 内存库）：@Transactional、7 种传播行为、隔离级别与不可重复读、失效场景、@TransactionalEventListener、TransactionSynchronization 各阶段回调与事务-连接绑定、TransactionTemplate、JDBC 细节（batchUpdate/RowMapper/ResultSetExtractor/异常转译） | `AppJdbcTemplate`（XML `tx:advice` 声明式事务+编程式事务） | `TransactionDeepTest` |
+| `spring.mybatis` | MyBatis 纯 Spring 集成：@MapperScan（Registrar/FactoryBean 实战）、注解/XML 两种 Mapper、动态 SQL（where/if/foreach）、一二级缓存（拦截器统计 SQL 实证）、插件拦截器、事务回滚 | — | `MyBatisTest` |
 | `spring.event` | 事件进阶：@EventListener、泛型事件、@Order、同步多播异常传播、@Async 异步事件、容器内置事件（refreshed/started/closed） | `AppEvent`+`AppEventListener`、`AppContextClosedListener` | `EventAdvancedTest` |
 | `spring.aware` | Aware 全家桶：BeanFactory/Environment/ApplicationEventPublisher/MessageSource/ResourceLoader/EmbeddedValueResolver + ImportAware | `AppBeanNameAware`、`AppApplicationContextAware` | `AwareTest` |
 | `spring.lifecycle` | 生命周期：SmartInitializingSingleton、SmartLifecycle（phase 启停顺序）、满配 Bean 全回调链（构造/@Autowired/Aware×3/@PostConstruct/afterPropertiesSet/initMethod/BPP 前后置/@PreDestroy/destroy/destroyMethod 共 13 步） | `App`（init/destroy 方法）、`AppDev`（InitializingBean）、`AppLifeCycleProcessor` | `SmartLifecycleTest` |
@@ -56,10 +69,15 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 # 运行某个主题的验证测试
 ./mvnw test -Dtest=ScopeTest
 
-# 运行全部主题测试（16 个测试类，完全离线）
+# 运行全部主题测试（22 个测试类，完全离线）
 ./mvnw test
 
 # Netty demo：直接在 IDE 里运行对应类的 main 方法
-# 注意：Echo/NIO/UDP/WebSocket/HttpFileServer 五个 demo 共用 8080 端口，同时只能跑一个；
-#      MQTT(1883) 与文件上传(9000) 独立，可与 8080 组的 demo 同时运行
+# 端口占用：8080 组（Echo/NIO/UDP/WebSocket/HttpFileServer，同时只能跑一个）、1883（MQTT）、
+#          9000（文件上传）、8101-8103（Reactor 对照）、8200（业务线程隔离）、8400（TCP 参数）；
+#          codec/core 中基于 EmbeddedChannel 的 demo 无端口，由 CodecTest/NettyCoreTest 自动验证
+# 文件类 demo 说明：HttpFileServer 根目录默认 ~/Downloads（可用 args[0] 指定）；
+#                  FileUploadClient 默认上传 ~/Downloads/netty-upload-demo.txt（不存在会自动生成）
 ```
+
+另：`com.alec.InnovateX.thread.ThreadStateDemoDetailed` 为 JDK 线程状态演示（与 Netty 无关，独立成包）。

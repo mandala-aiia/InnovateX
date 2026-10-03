@@ -19,6 +19,8 @@
         <jakarta.annotation.version>2.1.1</jakarta.annotation.version>
         <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
         <druid.version>1.2.28</druid.version>
+        <mybatis.version>3.5.19</mybatis.version>
+        <mybatis-spring.version>3.0.5</mybatis-spring.version>
         <h2.version>2.3.232</h2.version>
         <hutool.version>5.8.47</hutool.version>
         <lombok.version>1.18.48</lombok.version>
@@ -96,6 +98,19 @@
             <artifactId>druid</artifactId>
             <version>${druid.version}</version>
         </dependency>
+        <!-- MyBatis 纯 Spring 集成（非 starter）：@MapperScan 底层是 ImportBeanDefinitionRegistrar/扫描器，
+             SqlSessionFactoryBean/MapperFactoryBean 是 FactoryBean 的工业实战 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>${mybatis-spring.version}</version>
+        </dependency>
+
         <!-- 内存数据库：事务/SQL 演示与 XML 数据源共用 -->
         <dependency>
             <groupId>com.h2database</groupId>
