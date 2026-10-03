@@ -1,6 +1,6 @@
 # InnovateX
 
-Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**，不使用 Spring Boot）。
+Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 
 所有 Spring 主题的容器都是测试里手工装配的 `AnnotationConfigApplicationContext` / `ClassPathXmlApplicationContext` /
 `DispatcherServlet`，数据全部使用 H2 内存库——整个仓库**离线可完整构建与测试**。
@@ -59,5 +59,7 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**，不使用 
 # 运行全部主题测试（16 个测试类，完全离线）
 ./mvnw test
 
-# Netty demo：直接在 IDE 里运行对应类的 main 方法（各 demo 使用独立端口，见上表）
+# Netty demo：直接在 IDE 里运行对应类的 main 方法
+# 注意：Echo/NIO/UDP/WebSocket/HttpFileServer 五个 demo 共用 8080 端口，同时只能跑一个；
+#      MQTT(1883) 与文件上传(9000) 独立，可与 8080 组的 demo 同时运行
 ```
