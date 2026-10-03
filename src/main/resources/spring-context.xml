@@ -28,7 +28,7 @@
 
     <import resource="dev-context.xml"/>
 
-    <bean id="app" class="com.alec.InnovateX.spring.App" init-method="initApp" destroy-method="destroyApp">
+    <bean id="app" class="com.alec.InnovateX.spring.lifecycle.App" init-method="initApp" destroy-method="destroyApp">
         <property name="appName" value="${app.name}"/>
         <property name="appDev" ref="appDev"/>
         <property name="desc">
@@ -43,48 +43,48 @@
     </bean>
 
     <!--FactoryBean 测试   -->
-    <bean id="appFactoryBean" class="com.alec.InnovateX.spring.AppFactoryBean"/>
+    <bean id="appFactoryBean" class="com.alec.InnovateX.spring.extension.AppFactoryBean"/>
 
     <!--    构造器注入循环依赖无法解决  setter注入循环依赖可以解决-->
-    <bean id="circleA" class="com.alec.InnovateX.spring.CircleA">
+    <bean id="circleA" class="com.alec.InnovateX.spring.scope.CircleA">
         <!--            <constructor-arg index="0" ref="circleB"/>-->
         <property name="circleB" ref="circleB"/>
     </bean>
-    <bean id="circleB" class="com.alec.InnovateX.spring.CircleB">
+    <bean id="circleB" class="com.alec.InnovateX.spring.scope.CircleB">
         <!--            <constructor-arg index="0" ref="circleC"/>-->
         <property name="circleC" ref="circleC"/>
     </bean>
-    <bean id="circleC" class="com.alec.InnovateX.spring.CircleC">
+    <bean id="circleC" class="com.alec.InnovateX.spring.scope.CircleC">
         <!--            <constructor-arg index="0" ref="circleA"/>-->
         <property name="circleA" ref="circleA"/>
     </bean>
 
-    <bean id="appListener" class="com.alec.InnovateX.spring.AppEventListener"/>
+    <bean id="appListener" class="com.alec.InnovateX.spring.event.AppEventListener"/>
 
-    <bean id="appBeanFactoryPostProcessor" class="com.alec.InnovateX.spring.AppBeanFactoryPostProcessor"/>
+    <bean id="appBeanFactoryPostProcessor" class="com.alec.InnovateX.spring.extension.AppBeanFactoryPostProcessor"/>
 
-    <bean id="appBeanPostProcessor" class="com.alec.InnovateX.spring.AppBeanPostProcessor"/>
+    <bean id="appBeanPostProcessor" class="com.alec.InnovateX.spring.extension.AppBeanPostProcessor"/>
 
     <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
         <property name="basename" value="message"/>
     </bean>
 
-    <bean id="lifecycleProcessor" class="com.alec.InnovateX.spring.AppLifeCycleProcessor"/>
+    <bean id="lifecycleProcessor" class="com.alec.InnovateX.spring.lifecycle.AppLifeCycleProcessor"/>
 
-    <bean id="appContextClosedListener" class="com.alec.InnovateX.spring.AppContextClosedListener"/>
+    <bean id="appContextClosedListener" class="com.alec.InnovateX.spring.event.AppContextClosedListener"/>
 
-    <bean id="appBeanNameAware" class="com.alec.InnovateX.spring.AppBeanNameAware"/>
+    <bean id="appBeanNameAware" class="com.alec.InnovateX.spring.aware.AppBeanNameAware"/>
 
-    <bean id="appApplicationContextAware" class="com.alec.InnovateX.spring.AppApplicationContextAware"/>
+    <bean id="appApplicationContextAware" class="com.alec.InnovateX.spring.aware.AppApplicationContextAware"/>
 
     <bean id="appInstantiationAwareBeanPostProcessor"
-          class="com.alec.InnovateX.spring.AppInstantiationAwareBeanPostProcessor"/>
+          class="com.alec.InnovateX.spring.extension.AppInstantiationAwareBeanPostProcessor"/>
 
     <bean id="appInterface_01"
-          class="com.alec.InnovateX.spring.AppAbsServiceFirstImpl"/>
+          class="com.alec.InnovateX.spring.annotation.AppAbsServiceFirstImpl"/>
 
     <bean id="appInterface_02"
-          class="com.alec.InnovateX.spring.AppAbsServiceSecImpl"/>
+          class="com.alec.InnovateX.spring.annotation.AppAbsServiceSecImpl"/>
 
     <import resource="aspect-context.xml"/>
 
