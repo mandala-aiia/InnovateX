@@ -21,7 +21,8 @@ public class AppJdbcTemplate {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public String query() {
-        return jdbcTemplate.queryForObject("select uuid from innovatex limit 1", String.class);
+        // 补全 schema 限定：原 PG 库靠默认 search_path 解析，H2 默认 schema 是 PUBLIC，必须显式限定
+        return jdbcTemplate.queryForObject("select uuid from innovatex.innovatex limit 1", String.class);
     }
 
     public String insert() {

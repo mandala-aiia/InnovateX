@@ -3,9 +3,11 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
                            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
-                           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+                           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+                           http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
 
 
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
@@ -45,6 +47,11 @@
         <aop:pointcut id="pointcutTx" expression="execution(* com.alec.InnovateX.spring.transaction.AppJdbcTemplate.*(..))"/>
         <aop:advisor advice-ref="txAdvice" pointcut-ref="pointcutTx"/>
     </aop:config>
+
+    <!-- 容器刷新时对数据源执行幂等建表脚本（${jdbc.*} 现指向 H2 内存库，可离线运行） -->
+    <jdbc:initialize-database data-source="dataSource" enabled="true">
+        <jdbc:script location="classpath:xmltest/schema.sql"/>
+    </jdbc:initialize-database>
 
 
 </beans>

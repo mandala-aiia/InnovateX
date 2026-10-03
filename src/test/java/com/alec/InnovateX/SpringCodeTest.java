@@ -17,6 +17,8 @@ import org.springframework.core.io.Resource;
 
 import java.util.Locale;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 public class SpringCodeTest {
 
     @Test
@@ -50,11 +52,13 @@ public class SpringCodeTest {
         appPointcut.appPointcutAnnotation();
 
         AppJdbcTemplate appJdbcTemplate = context.getBean(AppJdbcTemplate.class);
+        // XML 事务演示（${jdbc.*} 指向 H2 内存库，全部离线可跑）
+        assertNotNull("查询结果不应为空", appJdbcTemplate.query());
         System.out.println("通过jdbcTemplate查询的结果：" + appJdbcTemplate.query());
-        // System.out.println("通过jdbcTemplate新增的数据：" + appJdbcTemplate.insert());
-        // System.out.println("通过jdbcTemplate修改的数据：" + appJdbcTemplate.update()); //xml事务异常回滚
-        // System.out.println("通过jdbcTemplate中的编程式事务修改的数据：" + appJdbcTemplate.programmatic()); //编程式事务异常回滚
-        // System.out.println("通过namedParameterJdbcTemplate新增的数据：" + appJdbcTemplate.namedParameter());
+        System.out.println("通过jdbcTemplate新增的数据：" + appJdbcTemplate.insert());
+        System.out.println("通过jdbcTemplate修改的数据：" + appJdbcTemplate.update()); //xml事务异常回滚
+        System.out.println("通过jdbcTemplate中的编程式事务修改的数据：" + appJdbcTemplate.programmatic()); //编程式事务异常回滚
+        System.out.println("通过namedParameterJdbcTemplate新增的数据：" + appJdbcTemplate.namedParameter());
 
         String appFace = "appInterface_";
         AppInterface appInterface = context.getBean(appFace+"02",AppInterface.class);
