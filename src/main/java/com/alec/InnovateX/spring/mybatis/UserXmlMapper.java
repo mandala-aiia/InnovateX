@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * XML 版 Mapper：SQL 写在 resources/mybatis-demo/UserXmlMapper.xml 里（namespace 指向本接口），
+ * XML 版 Mapper：SQL 写在 resources/mybatis/UserXmlMapper.xml 里（namespace 指向本接口），
  * 承担动态 SQL（if/where/foreach）与二级缓存（&lt;cache/&gt;）的演示
  */
 public interface UserXmlMapper {

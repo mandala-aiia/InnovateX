@@ -4,6 +4,7 @@ import com.alec.InnovateX.spring.aop.AopConfig;
 import com.alec.InnovateX.spring.aop.AopMessageService;
 import com.alec.InnovateX.spring.aop.AopOrderService;
 import com.alec.InnovateX.spring.aop.AopOrderServiceImpl;
+import com.alec.InnovateX.spring.aop.AppPointcut;
 import com.alec.InnovateX.spring.aop.DocumentService;
 import com.alec.InnovateX.spring.aop.FinalTargetService;
 import com.alec.InnovateX.spring.aop.IntroAopConfig;
@@ -177,6 +178,24 @@ public class AopDeepTest {
             service.write("移除后");
             assertEquals(1, dynamicLog.size());
             System.out.println("移除动态通知后: write 不再被拦截");
+        }
+    }
+
+    @Test
+    public void xmlFiveAdvices() {
+        // XML 版 AOP（aspect-context.xml）：五种通知 + @annotation 切面，目标无接口 -> CGLIB 代理
+        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
+            AppPointcut appPointcut = context.getBean(AppPointcut.class);
+            assertTrue(AopUtils.isCglibProxy(appPointcut), "XML aop:config 对无接口目标应生成 CGLIB 代理");
+
+            // 依次触发五种通知（异常通知保持注释，与原 SpringCodeTest 一致）
+            appPointcut.appPointcutBefore();
+            appPointcut.appPointcutReturning();
+            // appPointcut.appPointcutThrowing();  //异常通知
+            appPointcut.appPointcutAround();
+            appPointcut.appPointcutAfter();
+            appPointcut.appPointcutAnnotation();  // @annotation 切点：注解切面拦截
+            System.out.println("XML 五种通知 + 注解切面全部触发");
         }
     }
 

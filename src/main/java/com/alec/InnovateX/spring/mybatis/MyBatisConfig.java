@@ -1,6 +1,5 @@
 package com.alec.InnovateX.spring.mybatis;
 
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +30,7 @@ public class MyBatisConfig {
         return new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.H2)
                 .generateUniqueName(true)
-                .addScript("mybatis-demo/schema.sql")
+                .addScript("mybatis/schema.sql")
                 .build();
     }
 
@@ -41,7 +40,7 @@ public class MyBatisConfig {
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
         factory.setMapperLocations(new PathMatchingResourcePatternResolver()
-                .getResources("classpath:mybatis-demo/*.xml"));
+                .getResources("classpath:mybatis/*.xml"));
         org.apache.ibatis.session.Configuration configuration =
                 new org.apache.ibatis.session.Configuration();
         configuration.setMapUnderscoreToCamelCase(true); // 下划线列名 -> 驼峰属性

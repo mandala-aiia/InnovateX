@@ -1,5 +1,6 @@
 package com.alec.InnovateX.spring;
 
+import com.alec.InnovateX.spring.transaction.AppJdbcTemplate;
 import com.alec.InnovateX.spring.transaction.FailureScenarioService;
 import com.alec.InnovateX.spring.transaction.JdbcDetailService;
 import com.alec.InnovateX.spring.transaction.TransferService;
@@ -21,6 +22,7 @@ import java.sql.Statement;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -213,6 +215,21 @@ public class TransactionDeepTest {
             assertEquals("已标记回滚（setRollbackOnly）", svc.transfer("alice", "bob", 50, true));
             assertEquals(900, transfer.balance("alice"));
             System.out.println("TransactionTemplate: 提交生效，setRollbackOnly 回滚且不外抛异常");
+        }
+    }
+
+    @Test
+    public void xmlJdbcTemplateWithH2() {
+        // XML 版事务（transaction-context.xml）：tx:advice 声明式 + 编程式 + NamedParameterJdbcTemplate，H2 离线可跑
+        // 注意多个测试方法共享同名 H2 内存库（DB_CLOSE_DELAY=-1），因此不做精确行数断言
+        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
+            AppJdbcTemplate appJdbcTemplate = context.getBean(AppJdbcTemplate.class);
+            assertNotNull("查询结果不应为空", appJdbcTemplate.query());
+            System.out.println("XML jdbcTemplate 查询: " + appJdbcTemplate.query());
+            System.out.println("XML insert: " + appJdbcTemplate.insert());
+            System.out.println("XML 声明式事务 update（异常被方法内吞掉，实际提交）: " + appJdbcTemplate.update());
+            System.out.println("XML 编程式事务回滚: " + appJdbcTemplate.programmatic());
+            System.out.println("NamedParameterJdbcTemplate 插入: " + appJdbcTemplate.namedParameter());
         }
     }
 

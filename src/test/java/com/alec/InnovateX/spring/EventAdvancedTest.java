@@ -1,6 +1,7 @@
 package com.alec.InnovateX.spring;
 
 import com.alec.InnovateX.spring.event.AnnotationEventListener;
+import com.alec.InnovateX.spring.event.AppEvent;
 import com.alec.InnovateX.spring.event.AsyncEventListener;
 import com.alec.InnovateX.spring.event.BuiltinEventListener;
 import com.alec.InnovateX.spring.event.EventConfig;
@@ -76,6 +77,17 @@ public class EventAdvancedTest {
         }
         assertEquals(java.util.List.of("refreshed", "started", "closed"), BuiltinEventListener.EVENTS);
         System.out.println("容器内置事件序列: " + BuiltinEventListener.EVENTS);
+    }
+
+    @Test
+    public void xmlEventAndI18n() {
+        // XML 版事件（接口式 ApplicationListener）+ ApplicationContext 的 i18n 消息解析
+        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
+            context.publishEvent(new AppEvent(this, "spring event published"));
+            // ResourceBundleMessageSource：basename=message，en_US 资源束里的精确值
+            assertEquals("Original God", context.getMessage("app.message", null, "", java.util.Locale.US));
+            System.out.println("XML 事件已发布；i18n(app.message, en_US) = Original God");
+        }  // close 触发 AppContextClosedListener
     }
 
     @Test

@@ -36,13 +36,13 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 ### Spring 底层机制（`com.alec.InnovateX.spring`）
 
 全部按主题子包组织，每个主题一个测试类，自包含、不依赖外部环境（事务主题用 H2 内存库）。
-其中"XML 装配"一列的类是原始 26 个 XML 时代 demo，由 `SpringCodeTest` 配合 `spring-context.xml` 系列验证。
+其中"XML 装配"一列的类是原始 26 个 XML 时代 demo，由各主题测试类中的 `xmlXxx` 方法验证（通过共享工具 `XmlContexts` 加载 `spring-context.xml` 系列）。
 
 | 子包 | 主题 | XML 装配的原始 demo | 测试类 |
 |---|---|---|---|
 | `spring.annotation` | 注解驱动装配：@ComponentScan/@Autowired/@Qualifier/@Primary/@Resource/@Value/@PostConstruct、自定义 @Qualifier 元注解、ObjectProvider 按需注入 | `AppInterface`/`AppAbsService*`（接口多实现按名注入） | `AnnotationTest` |
 | `spring.javaconfig` | Java Config：full/lite 模式、@Import 三件套、@Conditional、@Profile/Environment、BeanDefinitionRegistryPostProcessor、@DependsOn/@Lazy、父子容器 | — | `JavaConfigTest` |
-| `spring.extension` | 容器扩展点：BeanPostProcessor/InstantiationAwareBeanPostProcessor/BeanFactoryPostProcessor/ReaderEventListener/FactoryBean | `AppBeanPostProcessor`、`AppInstantiationAwareBeanPostProcessor`、`AppBeanFactoryPostProcessor`、`AppReaderEventListener`、`AppFactoryBean`+`AppFaBean` | `SpringCodeTest`（XML） |
+| `spring.extension` | 容器扩展点：BeanPostProcessor/InstantiationAwareBeanPostProcessor/BeanFactoryPostProcessor/ReaderEventListener/FactoryBean | `AppBeanPostProcessor`、`AppInstantiationAwareBeanPostProcessor`、`AppBeanFactoryPostProcessor`、`AppReaderEventListener`、`AppFactoryBean`+`AppFaBean` | `ExtensionTest` |
 | `spring.scope` | 作用域：singleton/prototype、作用域代理、自定义 ThreadScope、循环依赖失败示例、@Lazy 打破循环、三级缓存早期引用验证 | `CircleA/B/C`（setter 循环依赖） | `ScopeTest` |
 | `spring.aop` | AOP 深度：@AspectJ 五种通知、JDK vs CGLIB 对比、编程式 ProxyFactory、within/target/args/bean 切点、自调用失效与 currentProxy 修复、@DeclareParents 引介增强、Advised 动态增删通知、多切面 @Order 洋葱模型 | `AppAspect`、`AppPointcut`、`AppAnnotation`+`AppAnnotationAspect`（XML 五通知+注解切面） | `AopDeepTest` |
 | `spring.transaction` | 事务深度（H2 内存库）：@Transactional、7 种传播行为、隔离级别与不可重复读、失效场景、@TransactionalEventListener、TransactionSynchronization 各阶段回调与事务-连接绑定、TransactionTemplate、JDBC 细节（batchUpdate/RowMapper/ResultSetExtractor/异常转译） | `AppJdbcTemplate`（XML `tx:advice` 声明式事务+编程式事务） | `TransactionDeepTest` |
