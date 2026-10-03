@@ -46,7 +46,6 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 | `spring.scope` | 作用域：singleton/prototype、作用域代理、自定义 ThreadScope、循环依赖失败示例、@Lazy 打破循环、三级缓存早期引用验证 | `CircleA/B/C`（setter 循环依赖） | `ScopeTest` |
 | `spring.aop` | AOP 深度：@AspectJ 五种通知、JDK vs CGLIB 对比、编程式 ProxyFactory、within/target/args/bean 切点、自调用失效与 currentProxy 修复、@DeclareParents 引介增强、Advised 动态增删通知、多切面 @Order 洋葱模型 | `AppAspect`、`AppPointcut`、`AppAnnotation`+`AppAnnotationAspect`（XML 五通知+注解切面） | `AopDeepTest` |
 | `spring.transaction` | 事务深度（H2 内存库）：@Transactional、7 种传播行为、隔离级别与不可重复读、失效场景、@TransactionalEventListener、TransactionSynchronization 各阶段回调与事务-连接绑定、TransactionTemplate、JDBC 细节（batchUpdate/RowMapper/ResultSetExtractor/异常转译） | `AppJdbcTemplate`（XML `tx:advice` 声明式事务+编程式事务） | `TransactionDeepTest` |
-| `spring.mybatis` | MyBatis 纯 Spring 集成：@MapperScan（Registrar/FactoryBean 实战）、注解/XML 两种 Mapper、动态 SQL（where/if/foreach）、一二级缓存（拦截器统计 SQL 实证）、插件拦截器、事务回滚 | — | `MyBatisTest` |
 | `spring.event` | 事件进阶：@EventListener、泛型事件、@Order、同步多播异常传播、@Async 异步事件、容器内置事件（refreshed/started/closed） | `AppEvent`+`AppEventListener`、`AppContextClosedListener` | `EventAdvancedTest` |
 | `spring.aware` | Aware 全家桶：BeanFactory/Environment/ApplicationEventPublisher/MessageSource/ResourceLoader/EmbeddedValueResolver + ImportAware | `AppBeanNameAware`、`AppApplicationContextAware` | `AwareTest` |
 | `spring.lifecycle` | 生命周期：SmartInitializingSingleton、SmartLifecycle（phase 启停顺序）、满配 Bean 全回调链（构造/@Autowired/Aware×3/@PostConstruct/afterPropertiesSet/initMethod/BPP 前后置/@PreDestroy/destroy/destroyMethod 共 13 步） | `App`（init/destroy 方法）、`AppDev`（InitializingBean）、`AppLifeCycleProcessor` | `SmartLifecycleTest` |
@@ -55,7 +54,6 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 | `spring.resource` | 资源与类型转换：Resource/ResourceLoader/ResourcePatternResolver、ConversionService+自定义 Converter、PropertyEditor、DataBinder+Validator | — | `ResourceTest` |
 | `spring.cache` | 缓存抽象：@EnableCaching + ConcurrentMapCacheManager、@Cacheable/@CachePut/@CacheEvict/@Caching | — | `CacheTest` |
 | `spring.async` | 异步与调度：@EnableAsync/@Async（自定义线程池+异常兜底）、@EnableScheduling/@Scheduled（fixedDelay/cron） | — | `AsyncTest` |
-| `spring.mvc` | Spring MVC（纯手工装配 DispatcherServlet）：请求流程、Filter vs Interceptor 顺序、@RestControllerAdvice、内容协商+自定义 HttpMessageConverter、自定义 HandlerMethodArgumentResolver、@Validated+@InitBinder 校验集成、自定义返回值处理器、multipart 上传、Callable/SSE 异步、RestTemplate+MockRestServiceServer | — | `MvcDeepTest` |
 
 ## 数据源说明
 
