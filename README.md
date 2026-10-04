@@ -2,8 +2,9 @@
 
 Java 技术学习实验场（**纯 Spring Framework 7.0 + Java 21**）
 
-所有 Spring 主题的容器都是测试里手工装配的 `AnnotationConfigApplicationContext` / `DispatcherServlet`，
-数据全部使用 H2 内存库——整个仓库**离线可完整构建与测试**。
+所有 Spring 主题的容器都是测试里装配的——手写 `AnnotationConfigApplicationContext` 为主，
+`spring.testctx` 主题演示 spring-test TestContext 的声明式上下文；数据全部使用 H2 内存库，
+整个仓库**离线可完整构建与测试**。不包含 Web 栈（spring-web/webmvc/webflux）的演示。
 
 ## 模块索引
 
