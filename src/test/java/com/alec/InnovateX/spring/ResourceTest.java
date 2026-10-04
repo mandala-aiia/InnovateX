@@ -39,15 +39,15 @@ public class ResourceTest {
         assertTrue(content.contains("annotation.app.name=InnovateX"));
         System.out.println("classpath 资源内容: " + content.replace("\n", " | "));
 
-        // Ant 通配 + classpath*：把根路径下所有 spring-*.xml 一网打尽
+        // Ant 通配 + classpath*：把根路径下所有 properties 一网打尽
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources("classpath*:spring-*.xml");
+        Resource[] resources = resolver.getResources("classpath*:*.properties");
         List<String> names = resources.length > 0
                 ? java.util.Arrays.stream(resources).map(Resource::getFilename).toList()
                 : List.of();
-        System.out.println("classpath*:spring-*.xml 匹配到: " + names);
-        assertTrue(names.contains("spring-context.xml"));
-        assertTrue(names.contains("spring-advanced.xml"));
+        System.out.println("classpath*:*.properties 匹配到: " + names);
+        assertTrue(names.contains("message_en_US.properties"));
+        assertTrue(names.contains("message_zh_CN.properties"));
     }
 
     @Test

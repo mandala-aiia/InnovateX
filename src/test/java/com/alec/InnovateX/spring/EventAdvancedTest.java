@@ -1,10 +1,10 @@
 package com.alec.InnovateX.spring;
 
 import com.alec.InnovateX.spring.event.AnnotationEventListener;
-import com.alec.InnovateX.spring.event.AppEvent;
 import com.alec.InnovateX.spring.event.AsyncEventListener;
 import com.alec.InnovateX.spring.event.BuiltinEventListener;
 import com.alec.InnovateX.spring.event.EventConfig;
+import com.alec.InnovateX.spring.event.InterfaceEventListener;
 import com.alec.InnovateX.spring.event.OrderChangedEvent;
 import com.alec.InnovateX.spring.event.OrderCreatedEvent;
 import com.alec.InnovateX.spring.event.OrderPayload;
@@ -80,14 +80,18 @@ public class EventAdvancedTest {
     }
 
     @Test
-    public void xmlEventAndI18n() {
-        // XML 版事件（接口式 ApplicationListener）+ ApplicationContext 的 i18n 消息解析
-        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
-            context.publishEvent(new AppEvent(this, "spring event published"));
+    public void interfaceListenerAndI18n() {
+        // 接口式 ApplicationListener（XML 时代唯一写法的注解装配版）+ ApplicationContext 的 i18n 消息解析
+        InterfaceEventListener.RECEIVED.clear();
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EventConfig.class)) {
+            ctx.publishEvent(new OrderCreatedEvent("SO-4005"));
+            assertEquals(1, InterfaceEventListener.RECEIVED.size());
+            assertEquals("interface:SO-4005", InterfaceEventListener.RECEIVED.get(0));
             // ResourceBundleMessageSource：basename=message，en_US 资源束里的精确值
-            assertEquals("Original God", context.getMessage("app.message", null, "", java.util.Locale.US));
-            System.out.println("XML 事件已发布；i18n(app.message, en_US) = Original God");
-        }  // close 触发 AppContextClosedListener
+            assertEquals("Original God", ctx.getMessage("app.message", null, "", java.util.Locale.US));
+            System.out.println("接口式监听器收到: " + InterfaceEventListener.RECEIVED
+                    + "；i18n(app.message, en_US) = Original God");
+        }
     }
 
     @Test

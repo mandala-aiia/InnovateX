@@ -24,6 +24,11 @@ public class AopConfig {
     }
 
     @Bean
+    public AppAnnotationAspect appAnnotationAspect() {
+        return new AppAnnotationAspect();
+    }
+
+    @Bean
     public SelfInvokeAspect selfInvokeAspect() {
         return new SelfInvokeAspect();
     }

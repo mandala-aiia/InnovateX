@@ -6,6 +6,7 @@ package com.alec.InnovateX.spring.aop;
  * - target(接口)：被代理对象实现某接口的所有方法
  * - args(参数类型列表)：按方法参数类型匹配
  * - bean(bean名称)：Spring 扩展的表达式，按 bean 名称匹配
+ * - @annotation(注解类型)：按方法上标注的注解匹配（见 annotationDemo + AppAnnotationAspect）
  */
 public class ZooTargetService {
 
@@ -23,5 +24,11 @@ public class ZooTargetService {
 
     public String beanDemo() {
         return "beanDemo";
+    }
+
+    /** @annotation 切点维度的目标：方法上标注 @AppAnnotation */
+    @AppAnnotation("zoo-annotation-demo")
+    public String annotationDemo() {
+        return "annotationDemo";
     }
 }

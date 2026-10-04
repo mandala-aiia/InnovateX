@@ -3,6 +3,7 @@ package com.alec.InnovateX.spring.transaction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
@@ -64,6 +65,20 @@ public class TxConfig {
     @Bean
     public JdbcDetailService jdbcDetailService(JdbcTemplate jdbcTemplate) {
         return new JdbcDetailService(jdbcTemplate);
+    }
+
+    /** NamedParameterJdbcTemplate：? 占位符的命名参数升级版，基于同一 DataSource */
+    @Bean
+    public NamedParameterJdbcTemplate namedParameterJdbcTemplate(DataSource dataSource) {
+        return new NamedParameterJdbcTemplate(dataSource);
+    }
+
+    /** 裸 PlatformTransactionManager 编程式事务 + NamedParameterJdbcTemplate 演示 */
+    @Bean
+    public ProgrammaticTxService programmaticTxService(JdbcTemplate jdbcTemplate,
+                                                       NamedParameterJdbcTemplate namedParameterJdbcTemplate,
+                                                       PlatformTransactionManager transactionManager) {
+        return new ProgrammaticTxService(jdbcTemplate, namedParameterJdbcTemplate, transactionManager);
     }
 
     /** TransactionTemplate：编程式事务的现代封装（传播行为/隔离级别可编程配置） */

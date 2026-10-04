@@ -5,14 +5,12 @@ import com.alec.InnovateX.spring.annotation.AnnotationFieldService;
 import com.alec.InnovateX.spring.annotation.AnnotationLifecycleBean;
 import com.alec.InnovateX.spring.annotation.AnnotationOrderService;
 import com.alec.InnovateX.spring.annotation.AnnotationQualifierService;
-import com.alec.InnovateX.spring.annotation.AppInterface;
 import com.alec.InnovateX.spring.annotation.AnnotationScanConfig;
 import com.alec.InnovateX.spring.annotation.ProviderConsumerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,21 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 主题①注解驱动装配：@ComponentScan / @Autowired / @Qualifier / @Primary / @Resource / @Value / @PostConstruct
  */
 public class AnnotationTest {
-
-    @Test
-    public void xmlMultiImplByName() {
-        // XML 版多实现注入：按 bean 名称（appInterface_01/02）取不同实现，接口的四种方法形态全部可调用
-        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
-            AppInterface first = context.getBean("appInterface_01", AppInterface.class);
-            AppInterface second = context.getBean("appInterface_02", AppInterface.class);
-            first.display();
-            second.submit();
-            second.defaultMethod();
-            AppInterface.staticMethod();
-            assertNotEquals(first, second);
-            System.out.println("XML 按 bean 名称注入不同实现: appInterface_01/appInterface_02");
-        }
-    }
 
     @Test
     public void annotationDrivenWiring() {

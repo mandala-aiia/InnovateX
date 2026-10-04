@@ -1,7 +1,5 @@
 package com.alec.InnovateX.spring;
 
-import com.alec.InnovateX.spring.lifecycle.App;
-import com.alec.InnovateX.spring.lifecycle.AppDev;
 import com.alec.InnovateX.spring.lifecycle.FullLifecycleBean;
 import com.alec.InnovateX.spring.lifecycle.FullLifecycleConfig;
 import com.alec.InnovateX.spring.lifecycle.LifecycleConfig;
@@ -42,39 +40,6 @@ public class SmartLifecycleTest {
         assertEquals("phase2-stop", PhaseOneLifecycle.EVENTS.get(2));
         assertEquals("phase1-stop", PhaseOneLifecycle.EVENTS.get(3));
         System.out.println("SmartLifecycle 启停事件序列: " + PhaseOneLifecycle.EVENTS);
-    }
-
-    @Test
-    public void xmlLifecycleBeans() {
-        // XML 版生命周期：init-method/destroy-method、InitializingBean、占位符与属性覆盖解析、LifecycleProcessor
-        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
-            App app = context.getBean(App.class);
-            // 占位符：app.name 来自 app.properties；appFirSec 三个文件都定义了——
-            // 实测 PropertySourcesPlaceholderConfigurer 多 locations 合并时"后加载的覆盖先加载的"，
-            // 列表末尾的 app.properties（app_pro）反而胜出（与直觉相反，以此断言为准）
-            assertEquals("原神", app.getAppName());
-            assertEquals("app_pro", app.getAppFirSec());
-            assertEquals(List.of("原神1号", "原神2号", "原神3号"), app.getDesc());
-
-            AppDev appDev = context.getBean(AppDev.class);
-            // appDevName：p:appDevName="${appDev.name}"，实测值为"原神DevName"（Spring 6.2 的 p:/占位符组合行为）
-            assertEquals("原神DevName", appDev.getAppDevName());
-            // PropertyOverrideConfigurer：override.properties 强制覆盖了占位符解析出的"原神Dev_over"
-            assertEquals("原神Dev_override", appDev.getAppDevOverride());
-            // c: 命名空间构造参数注入
-            assertEquals("原神Dev_C", appDev.getAppDevC());
-            // PropertyOverrideConfigurer：override.properties 强制覆盖了占位符解析出的"原神Dev_over"
-            assertEquals("原神Dev_override", appDev.getAppDevOverride());
-            // c: 命名空间构造参数注入
-            assertEquals("原神Dev_C", appDev.getAppDevC());
-            // ref 注入：App 持有同一个 AppDev
-            assertEquals(appDev, app.getAppDev());
-            System.out.println("XML 生命周期 Bean: " + app);
-
-            // 名为 lifecycleProcessor 的 Bean 会被容器当作 LifecycleProcessor（start/stop 时回调）
-            context.start();
-            context.stop();
-        }  // close 触发 destroy-method/DisposableBean.destroy
     }
 
     @Test

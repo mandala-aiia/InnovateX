@@ -1,8 +1,6 @@
 package com.alec.InnovateX.spring;
 
 import com.alec.InnovateX.spring.aware.AllAwareBean;
-import com.alec.InnovateX.spring.aware.AppApplicationContextAware;
-import com.alec.InnovateX.spring.aware.AppBeanNameAware;
 import com.alec.InnovateX.spring.aware.AwareConfig;
 import com.alec.InnovateX.spring.aware.RootConfig;
 import org.junit.jupiter.api.Test;
@@ -16,16 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 主题⑦Aware 全家桶：6 个基础设施注入回调 + @Configuration 专属的 ImportAware
  */
 public class AwareTest {
-
-    @Test
-    public void xmlAwareBeans() {
-        // XML 版 Aware：回调打印在控制台（setBeanName/setApplicationContext），按名装配成功即证明回调已触发
-        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
-            assertNotNull(context.getBean("appBeanNameAware", AppBeanNameAware.class));
-            assertNotNull(context.getBean(AppApplicationContextAware.class));
-            System.out.println("XML Aware Bean 装配成功（回调打印见控制台）");
-        }
-    }
 
     @Test
     public void allAwareCallbacks() {

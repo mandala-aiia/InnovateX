@@ -1,6 +1,6 @@
 package com.alec.InnovateX.spring;
 
-import com.alec.InnovateX.spring.transaction.AppJdbcTemplate;
+import com.alec.InnovateX.spring.transaction.ProgrammaticTxService;
 import com.alec.InnovateX.spring.transaction.FailureScenarioService;
 import com.alec.InnovateX.spring.transaction.JdbcDetailService;
 import com.alec.InnovateX.spring.transaction.TransferService;
@@ -22,7 +22,6 @@ import java.sql.Statement;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -219,17 +218,22 @@ public class TransactionDeepTest {
     }
 
     @Test
-    public void xmlJdbcTemplateWithH2() {
-        // XML 版事务（transaction-context.xml）：tx:advice 声明式 + 编程式 + NamedParameterJdbcTemplate，H2 离线可跑
-        // 注意多个测试方法共享同名 H2 内存库（DB_CLOSE_DELAY=-1），因此不做精确行数断言
-        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
-            AppJdbcTemplate appJdbcTemplate = context.getBean(AppJdbcTemplate.class);
-            assertNotNull("查询结果不应为空", appJdbcTemplate.query());
-            System.out.println("XML jdbcTemplate 查询: " + appJdbcTemplate.query());
-            System.out.println("XML insert: " + appJdbcTemplate.insert());
-            System.out.println("XML 声明式事务 update（异常被方法内吞掉，实际提交）: " + appJdbcTemplate.update());
-            System.out.println("XML 编程式事务回滚: " + appJdbcTemplate.programmatic());
-            System.out.println("NamedParameterJdbcTemplate 插入: " + appJdbcTemplate.namedParameter());
+    public void programmaticTransactionAndNamedParameter() {
+        // 裸 PlatformTransactionManager 手动 begin/commit/rollback（TransactionTemplate 之下的底层形态）
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TxConfig.class)) {
+            ProgrammaticTxService svc = ctx.getBean(ProgrammaticTxService.class);
+
+            // 手动提交：两行转账落库
+            assertEquals(2, svc.committedTransfer("alice", "bob", 100));
+
+            // 手动回滚：扣款 SQL 已执行但不落库，alice 余额保持 900
+            svc.rolledBackTransfer("alice", "bob", 100);
+            assertEquals(900, transfer(ctx).balance("alice"));
+
+            // NamedParameterJdbcTemplate：:name 命名占位符插入 order_log
+            assertEquals(1, svc.namedParameterInsert("SO-9002", 66));
+            System.out.println("编程式事务: 手动 commit 2 行；手动 rollback 后 alice="
+                    + transfer(ctx).balance("alice") + "；命名参数插入 order_log 1 行");
         }
     }
 

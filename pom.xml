@@ -16,7 +16,6 @@
         <spring.version>6.2.19</spring.version>
         <aspectjweaver.version>1.9.25.1</aspectjweaver.version>
         <jakarta.annotation.version>2.1.1</jakarta.annotation.version>
-        <druid.version>1.2.28</druid.version>
         <h2.version>2.3.232</h2.version>
         <hutool.version>5.8.47</hutool.version>
         <lombok.version>1.18.48</lombok.version>
@@ -71,13 +70,7 @@
             <version>${jakarta.annotation.version}</version>
         </dependency>
 
-        <!-- XML 数据源演示用的 Druid 连接池（裸包，spring-context.xml 直接装配 DruidDataSource） -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
-            <version>${druid.version}</version>
-        </dependency>
-        <!-- 内存数据库：事务演示与 XML 数据源共用 -->
+        <!-- 内存数据库：事务演示的自包含数据源 -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

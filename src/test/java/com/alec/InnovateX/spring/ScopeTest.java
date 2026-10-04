@@ -2,7 +2,6 @@ package com.alec.InnovateX.spring;
 
 import com.alec.InnovateX.spring.scope.AopCircleB;
 import com.alec.InnovateX.spring.scope.AopCircleConfig;
-import com.alec.InnovateX.spring.scope.CircleA;
 import com.alec.InnovateX.spring.scope.ConstructorCircleConfig;
 import com.alec.InnovateX.spring.scope.EarlyReferenceProcessor;
 import com.alec.InnovateX.spring.scope.LazyCircleConfig;
@@ -11,6 +10,8 @@ import com.alec.InnovateX.spring.scope.PrototypeBean;
 import com.alec.InnovateX.spring.scope.PrototypeCircleConfig;
 import com.alec.InnovateX.spring.scope.ScopeConfig;
 import com.alec.InnovateX.spring.scope.ScopeProxyHolder;
+import com.alec.InnovateX.spring.scope.SetterCircleA;
+import com.alec.InnovateX.spring.scope.SetterCircleB;
 import com.alec.InnovateX.spring.scope.SetterCircleConfig;
 import com.alec.InnovateX.spring.scope.SingletonBean;
 import com.alec.InnovateX.spring.scope.ThreadScopeConfig;
@@ -101,14 +102,13 @@ public class ScopeTest {
     }
 
     @Test
-    public void xmlSetterCircle() {
-        // XML 版 setter 循环依赖：三级缓存默认开启，A->B->C->A 闭环成立
+    public void setterCircleClosedByDefault() {
+        // setter/字段注入循环依赖：三级缓存默认开启，A<->B 闭环成立
         // 也可用 context.getDefaultListableBeanFactory().setAllowCircularReferences(false) 观察失败
-        try (org.springframework.context.support.GenericApplicationContext context = XmlContexts.load()) {
-            CircleA a = context.getBean(CircleA.class);
-            assertEquals(a, a.getCircleB().getCircleC().getCircleA());
-            // 注意不能调 a.a()：业务方法 a()->b()->c()->a() 是无限递归（原 demo 也从未调用过）
-            System.out.println("XML setter 循环依赖: A->B->C->A 引用闭环成立");
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SetterCircleConfig.class)) {
+            SetterCircleA a = ctx.getBean(SetterCircleA.class);
+            assertEquals(a, a.getB().getA());
+            System.out.println("setter 循环依赖: A->B->A 引用闭环成立");
         }
     }
 

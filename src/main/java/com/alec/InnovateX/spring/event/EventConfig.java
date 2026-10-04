@@ -1,8 +1,10 @@
 package com.alec.InnovateX.spring.event;
 
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -23,5 +25,19 @@ public class EventConfig {
         executor.setCorePoolSize(1);
         executor.initialize();
         return executor;
+    }
+
+    /** 接口式监听器（XML 时代唯一写法）的注解装配版 */
+    @Bean
+    public InterfaceEventListener interfaceEventListener() {
+        return new InterfaceEventListener();
+    }
+
+    /** 容器 i18n 消息解析：bean 名必须是 messageSource 才会被 ApplicationContext 自动采用 */
+    @Bean
+    public MessageSource messageSource() {
+        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+        source.setBasename("message");
+        return source;
     }
 }
