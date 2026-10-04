@@ -1,6 +1,6 @@
 # InnovateX
 
-Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
+Java 技术学习实验场（**纯 Spring Framework 7.0 + Java 21**）
 
 所有 Spring 主题的容器都是测试里手工装配的 `AnnotationConfigApplicationContext` / `DispatcherServlet`，
 数据全部使用 H2 内存库——整个仓库**离线可完整构建与测试**。
@@ -36,7 +36,8 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 ### Spring 底层机制（`com.alec.InnovateX.spring`）
 
 全部按主题子包组织，每个主题一个测试类，自包含、不依赖外部环境（事务主题用 H2 内存库）。
-装配方式统一为注解 / Java Config（原 XML 装配 demo 已整体移除，为升级 Spring 7.x 铺路）。
+装配方式统一为注解 / Java Config，全部演示已基于 Spring Framework 7.0 整体重新生成
+（15 个主题包 + 15 个测试类，97 个测试；JUnit 升至 6.1.3 以配合 spring-test 7.0）。
 
 | 子包 | 主题 | 测试类 |
 |---|---|---|
@@ -46,13 +47,15 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 | `spring.scope` | 作用域：singleton/prototype、作用域代理、自定义 ThreadScope、循环依赖失败示例、@Lazy 打破循环、三级缓存早期引用验证 | `ScopeTest` |
 | `spring.aop` | AOP 深度：@AspectJ 五种通知、JDK vs CGLIB 对比、编程式 ProxyFactory、within/target/args/bean/@annotation 切点、自调用失效与 currentProxy 修复、@DeclareParents 引介增强、Advised 动态增删通知、多切面 @Order 洋葱模型 | `AopDeepTest` |
 | `spring.transaction` | 事务深度（H2 内存库）：@Transactional、7 种传播行为、隔离级别与不可重复读、失效场景、@TransactionalEventListener、TransactionSynchronization 各阶段回调与事务-连接绑定、TransactionTemplate、裸 PlatformTransactionManager 编程式事务、NamedParameterJdbcTemplate、JDBC 细节（batchUpdate/RowMapper/ResultSetExtractor/异常转译） | `TransactionDeepTest` |
-| `spring.event` | 事件进阶：@EventListener、接口式 ApplicationListener、泛型事件、@Order、同步多播异常传播、@Async 异步事件、容器内置事件（refreshed/started/closed）、MessageSource i18n | `EventAdvancedTest` |
+| `spring.event` | 事件进阶：@EventListener、接口式 ApplicationListener（POJO 事件的 PayloadApplicationEvent 包装）、泛型事件、@Order、同步多播异常传播、@Async 异步事件、容器内置事件（refreshed/started/closed）、MessageSource i18n | `EventAdvancedTest` |
 | `spring.aware` | Aware 全家桶：BeanFactory/Environment/ApplicationEventPublisher/MessageSource/ResourceLoader/EmbeddedValueResolver + ImportAware | `AwareTest` |
 | `spring.lifecycle` | 生命周期：SmartInitializingSingleton、SmartLifecycle（phase 启停顺序）、满配 Bean 全回调链（构造/@Autowired/Aware×3/@PostConstruct/afterPropertiesSet/initMethod/BPP 前后置/@PreDestroy/destroy/destroyMethod 共 13 步） | `SmartLifecycleTest` |
 | `spring.spel` | SpEL：运算符/三元/Elvis/正则/方法/T()/集合投影筛选、@Value 中的 SpEL | `SpelTest` |
 | `spring.resource` | 资源与类型转换：Resource/ResourceLoader/ResourcePatternResolver、ConversionService+自定义 Converter、PropertyEditor、DataBinder+Validator | `ResourceTest` |
 | `spring.cache` | 缓存抽象：@EnableCaching + ConcurrentMapCacheManager、@Cacheable/@CachePut/@CacheEvict/@Caching | `CacheTest` |
 | `spring.async` | 异步与调度：@EnableAsync/@Async（自定义线程池+异常兜底）、@EnableScheduling/@Scheduled（fixedDelay/cron） | `AsyncTest` |
+| `spring.testctx` | spring-test TestContext 框架：@ExtendWith+@ContextConfiguration 声明式上下文与字段注入、上下文按配置键缓存、@ActiveProfiles、@DirtiesContext 重建、@Transactional 测试事务自动回滚 | `SpringTestContextTest` |
+| `spring.aot` | AOT RuntimeHints：RuntimeHintsRegistrar 登记反射/资源/资源束/JDK 代理 hint、@ImportRuntimeHints 在 JVM 运行时 inert、7.x 已弃用 JDK 序列化通道 | `AotHintsTest` |
 
 ## 数据源说明
 
@@ -65,7 +68,7 @@ Java 技术学习实验场（**纯 Spring Framework 6.2 + Java 21**）
 # 运行某个主题的验证测试
 ./mvnw test -Dtest=ScopeTest
 
-# 运行全部测试（19 个测试类，完全离线）
+# 运行全部测试（21 个测试类，完全离线）
 ./mvnw test
 
 # Netty demo：直接在 IDE 里运行对应类的 main 方法

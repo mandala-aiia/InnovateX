@@ -1,28 +1,34 @@
 package com.alec.InnovateX.spring.scope;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
 /**
- * prototype 循环依赖：三级缓存只服务于 singleton。prototype 每次 getBean 都现场创建，
- * 创建 A 时需要 B、创建 B 时又需要 A，无限递归，Spring 检测后在第二次创建时抛异常终止
+ * prototype 循环依赖装配：Bean 定义合法，容器也能顺利 refresh
+ * （prototype 默认懒创建，refresh 时不实例化）——第一次 getBean 时才爆炸：
+ * UnsatisfiedDependencyException，根因是 BeanCurrentlyInCreationException。
+ * <p>
+ * 对比 singleton 循环：singleton 有"正在创建"的三级缓存可以救；
+ * prototype 的"正在创建"标记只能用来检测并打断递归。
  */
 @Configuration
 public class PrototypeCircleConfig {
 
     @Bean
-    @org.springframework.context.annotation.Scope("prototype")
-    public PrototypeCircleA prototypeCircleA(PrototypeCircleB b) {
-        PrototypeCircleA a = new PrototypeCircleA();
-        a.setB(b);
+    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+    public JobShardA jobShardA(JobShardB partner) {
+        JobShardA a = new JobShardA();
+        a.setPartner(partner);
         return a;
     }
 
     @Bean
-    @org.springframework.context.annotation.Scope("prototype")
-    public PrototypeCircleB prototypeCircleB(PrototypeCircleA a) {
-        PrototypeCircleB b = new PrototypeCircleB();
-        b.setA(a);
+    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+    public JobShardB jobShardB(JobShardA partner) {
+        JobShardB b = new JobShardB();
+        b.setPartner(partner);
         return b;
     }
 }

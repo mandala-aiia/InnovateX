@@ -1,19 +1,26 @@
 package com.alec.InnovateX.spring;
 
-import com.alec.InnovateX.spring.event.AnnotationEventListener;
-import com.alec.InnovateX.spring.event.AsyncEventListener;
-import com.alec.InnovateX.spring.event.BuiltinEventListener;
-import com.alec.InnovateX.spring.event.EventConfig;
-import com.alec.InnovateX.spring.event.InterfaceEventListener;
-import com.alec.InnovateX.spring.event.OrderChangedEvent;
-import com.alec.InnovateX.spring.event.OrderCreatedEvent;
-import com.alec.InnovateX.spring.event.OrderPayload;
-import com.alec.InnovateX.spring.event.OrderedListeners;
-import com.alec.InnovateX.spring.event.UserChangedEvent;
-import com.alec.InnovateX.spring.event.UserPayload;
+import com.alec.InnovateX.spring.event.AsyncEventConfig;
+import com.alec.InnovateX.spring.event.AuditAlarmEvent;
+import com.alec.InnovateX.spring.event.CoreEventConfig;
+import com.alec.InnovateX.spring.event.ContextLifecycleRecorder;
+import com.alec.InnovateX.spring.event.EventRecorderListeners;
+import com.alec.InnovateX.spring.event.InventoryService;
+import com.alec.InnovateX.spring.event.LegacyInterfaceListener;
+import com.alec.InnovateX.spring.event.LifecycleEventConfig;
+import com.alec.InnovateX.spring.event.MemberChangedEvent;
+import com.alec.InnovateX.spring.event.MemberPayload;
+import com.alec.InnovateX.spring.event.OrderingEventConfig;
+import com.alec.InnovateX.spring.event.ShipmentAsyncListener;
+import com.alec.InnovateX.spring.event.ShipmentDispatchedEvent;
+import com.alec.InnovateX.spring.event.StockEventListeners;
+import com.alec.InnovateX.spring.event.StockMovedEvent;
+import com.alec.InnovateX.spring.event.ThresholdAlertListener;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,88 +29,109 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 主题⑥事件机制进阶：@EventListener 注解式、泛型事件、@Order 顺序、
- * 同步多播的异常传播、@Async 异步事件
+ * 事件机制进阶：@EventListener 注解式（一个类集中监听多事件）、接口式 ApplicationListener 与
+ * PayloadApplicationEvent 包装规则、泛型事件 ResolvableType 精确匹配、@Order 监听顺序、
+ * 同步多播异常中断传播、@Async 异步监听（自定义 executor 线程名断言）、容器内置事件、MessageSource i18n。
  */
 public class EventAdvancedTest {
 
     @Test
     public void annotationListenerAndGenericEvent() {
-        AnnotationEventListener.RECEIVED.clear();
-        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EventConfig.class)) {
-            ctx.publishEvent(new OrderCreatedEvent("SO-4001"));
-            assertEquals(1, AnnotationEventListener.RECEIVED.size());
+        EventRecorderListeners.RECEIVED.clear();
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CoreEventConfig.class)) {
+            // 业务 Bean 经注入的 ApplicationEventPublisher 发布：一次业务动作发两个事件
+            ctx.getBean(InventoryService.class).addProduct("SKU-7001", 19.9);
+            assertEquals(2, EventRecorderListeners.RECEIVED.size());
 
-            // 泛型事件：OrderPayload 载荷只命中 OrderPayload 监听器
-            ctx.publishEvent(new OrderChangedEvent(this, new OrderPayload("SO-4002", 99.9)));
-            ctx.publishEvent(new UserChangedEvent(this, new UserPayload("alex", true)));
-            assertEquals(3, AnnotationEventListener.RECEIVED.size());
-            System.out.println("注解监听器 + 泛型事件命中: " + AnnotationEventListener.RECEIVED);
-            assertTrue(AnnotationEventListener.RECEIVED.get(1).startsWith("EntityChangedEvent<OrderPayload>"));
-            assertTrue(AnnotationEventListener.RECEIVED.get(2).startsWith("EntityChangedEvent<UserPayload>"));
+            // 泛型事件：固化泛型的具体子类直接 publish，ResolvableType 按泛型实参精确匹配、互不串扰
+            ctx.publishEvent(new MemberChangedEvent(this, new MemberPayload("alex", true)));
+            assertEquals(3, EventRecorderListeners.RECEIVED.size());
+
+            assertEquals("product-added:SKU-7001", EventRecorderListeners.RECEIVED.get(0));
+            assertEquals("product-changed:SKU-7001", EventRecorderListeners.RECEIVED.get(1));
+            assertEquals("member-changed:alex", EventRecorderListeners.RECEIVED.get(2));
+            System.out.println("注解式监听器 + 泛型事件命中: " + EventRecorderListeners.RECEIVED);
         }
     }
 
     @Test
-    public void listenerOrderAndExceptionPropagation() {
-        OrderedListeners.EXECUTION.clear();
-        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EventConfig.class)) {
-            // @Order(1) 先于 @Order(2)
-            ctx.publishEvent(new OrderCreatedEvent("SO-4003"));
-            assertEquals(2, OrderedListeners.EXECUTION.size());
-            assertEquals("first", OrderedListeners.EXECUTION.get(0));
-            assertEquals("second", OrderedListeners.EXECUTION.get(1));
-            System.out.println("监听器执行顺序: " + OrderedListeners.EXECUTION);
+    public void interfaceListenerReceivesPayloadWrapper() {
+        LegacyInterfaceListener.RECEIVED.clear();
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CoreEventConfig.class)) {
+            ctx.getBean(InventoryService.class).addProduct("SKU-7002", 29.9);
+            // POJO 事件被包装成 PayloadApplicationEvent<ProductAddedEvent> 多播——接口式声明的是包装类型
+            assertEquals(1, LegacyInterfaceListener.RECEIVED.size());
+            assertEquals("interface:SKU-7002", LegacyInterfaceListener.RECEIVED.get(0));
+            System.out.println("接口式监听器收到包装事件: " + LegacyInterfaceListener.RECEIVED);
+        }
+    }
 
-            // 同步多播：前面的监听器抛异常 -> 后面的不再执行，异常传播回 publishEvent
-            OrderedListeners.EXECUTION.clear();
+    @Test
+    public void messageSourceI18n() {
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CoreEventConfig.class)) {
+            // bean 名必须是 messageSource，容器才采用它；basename=message 引用已有资源束（key：app.message）
+            assertEquals("Original God", ctx.getMessage("app.message", null, "", Locale.US));
+            assertEquals("原神", ctx.getMessage("app.message", null, "", Locale.SIMPLIFIED_CHINESE));
+            System.out.println("i18n app.message -> en_US=Original God, zh_CN=原神");
+        }
+    }
+
+    @Test
+    public void listenerOrderAndExceptionInterruptsPropagation() {
+        StockEventListeners.EXECUTION.clear();
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(OrderingEventConfig.class)) {
+            // @Order(10) 先于 @Order(20)
+            ctx.publishEvent(new StockMovedEvent("SKU-7003", 5));
+            assertEquals(List.of("audit:SKU-7003", "notify:SKU-7003"), StockEventListeners.EXECUTION);
+            System.out.println("@Order 监听顺序: " + StockEventListeners.EXECUTION);
+
+            // 同步多播：前面的监听器抛异常 -> 后续监听器不再执行，异常抛回 publishEvent 调用方
+            StockEventListeners.EXECUTION.clear();
             assertThrows(IllegalStateException.class,
-                    () -> ctx.publishEvent(new com.alec.InnovateX.spring.event.RiskyEvent("risky")));
-            assertEquals(1, OrderedListeners.EXECUTION.size());
-            assertEquals("throwing", OrderedListeners.EXECUTION.get(0));
-            System.out.println("异常中断后续监听器: 实际执行 " + OrderedListeners.EXECUTION);
+                    () -> ctx.publishEvent(new AuditAlarmEvent("库存对不上")));
+            assertEquals(List.of("alarm-throwing"), StockEventListeners.EXECUTION);
+            System.out.println("同步多播异常中断: 实际执行 " + StockEventListeners.EXECUTION);
+        }
+    }
+
+    @Test
+    public void asyncListenerRunsOnCustomExecutor() throws InterruptedException {
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(AsyncEventConfig.class)) {
+            ctx.publishEvent(new ShipmentDispatchedEvent("TRK-7004"));
+            // 发布方立即返回，异步监听器在自定义线程池执行完（CountDownLatch 同步，不裸 sleep）
+            assertTrue(ShipmentAsyncListener.DONE.await(3, TimeUnit.SECONDS), "异步监听器应在 3 秒内完成");
+            System.out.println("异步监听线程: " + ShipmentAsyncListener.workerThreadName
+                    + "，发布线程: " + Thread.currentThread().getName());
+            assertNotEquals(Thread.currentThread().getName(), ShipmentAsyncListener.workerThreadName);
+            assertTrue(ShipmentAsyncListener.workerThreadName.startsWith("shipment-worker-"),
+                    "应运行在自定义 executor 线程上");
+        }
+    }
+
+    @Test
+    public void conditionalListenerFiltersBySpel() {
+        ThresholdAlertListener.ALERTS.clear();
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(OrderingEventConfig.class)) {
+            // condition 为 false 的事件被整体跳过，方法体不执行
+            ctx.publishEvent(new StockMovedEvent("SKU-7008", 3));
+            assertTrue(ThresholdAlertListener.ALERTS.isEmpty(), "小额变动不应触发告警");
+            // condition 为 true 才进入监听器
+            ctx.publishEvent(new StockMovedEvent("SKU-7009", 77));
+            assertEquals(List.of("SKU-7009:77"), ThresholdAlertListener.ALERTS);
+            System.out.println("condition(SpEL) 过滤: 小额跳过、大额命中 " + ThresholdAlertListener.ALERTS);
         }
     }
 
     @Test
     public void builtinContextEvents() {
-        BuiltinEventListener.EVENTS.clear();
-        // 构造即 refresh -> ContextRefreshedEvent；start() -> ContextStartedEvent；close() -> ContextClosedEvent
-        try (org.springframework.context.annotation.AnnotationConfigApplicationContext ctx =
-                     new org.springframework.context.annotation.AnnotationConfigApplicationContext(EventConfig.class)) {
-            assertEquals(java.util.List.of("refreshed"), BuiltinEventListener.EVENTS);
+        ContextLifecycleRecorder.TIMELINE.clear();
+        // 构造即 refresh -> refreshed；显式 start() -> started；try-with-resources 关闭 -> closed
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(LifecycleEventConfig.class)) {
+            assertEquals(List.of("refreshed"), ContextLifecycleRecorder.TIMELINE);
             ctx.start();
-            assertEquals(java.util.List.of("refreshed", "started"), BuiltinEventListener.EVENTS);
+            assertEquals(List.of("refreshed", "started"), ContextLifecycleRecorder.TIMELINE);
         }
-        assertEquals(java.util.List.of("refreshed", "started", "closed"), BuiltinEventListener.EVENTS);
-        System.out.println("容器内置事件序列: " + BuiltinEventListener.EVENTS);
-    }
-
-    @Test
-    public void interfaceListenerAndI18n() {
-        // 接口式 ApplicationListener（XML 时代唯一写法的注解装配版）+ ApplicationContext 的 i18n 消息解析
-        InterfaceEventListener.RECEIVED.clear();
-        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EventConfig.class)) {
-            ctx.publishEvent(new OrderCreatedEvent("SO-4005"));
-            assertEquals(1, InterfaceEventListener.RECEIVED.size());
-            assertEquals("interface:SO-4005", InterfaceEventListener.RECEIVED.get(0));
-            // ResourceBundleMessageSource：basename=message，en_US 资源束里的精确值
-            assertEquals("Original God", ctx.getMessage("app.message", null, "", java.util.Locale.US));
-            System.out.println("接口式监听器收到: " + InterfaceEventListener.RECEIVED
-                    + "；i18n(app.message, en_US) = Original God");
-        }
-    }
-
-    @Test
-    public void asyncListener() throws Exception {
-        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EventConfig.class)) {
-            ctx.publishEvent(new OrderCreatedEvent("SO-4004"));
-            // 发布方立即返回，异步监听器在独立线程执行完
-            assertTrue(AsyncEventListener.LATCH.await(3, TimeUnit.SECONDS));
-            System.out.println("异步监听器线程: " + AsyncEventListener.threadName
-                    + "，发布线程: " + Thread.currentThread().getName());
-            assertNotEquals(Thread.currentThread().getName(), AsyncEventListener.threadName);
-            assertTrue(AsyncEventListener.threadName.startsWith("event-async-"));
-        }
+        assertEquals(List.of("refreshed", "started", "closed"), ContextLifecycleRecorder.TIMELINE);
+        System.out.println("容器内置事件时间线: " + ContextLifecycleRecorder.TIMELINE);
     }
 }

@@ -1,66 +1,95 @@
 package com.alec.InnovateX.spring;
 
-import com.alec.InnovateX.spring.extension.AppBeanFactoryPostProcessor;
-import com.alec.InnovateX.spring.extension.AppBeanPostProcessor;
-import com.alec.InnovateX.spring.extension.AppFactoryBean;
-import com.alec.InnovateX.spring.extension.AppFaBean;
-import com.alec.InnovateX.spring.extension.AppInstantiationAwareBeanPostProcessor;
 import com.alec.InnovateX.spring.extension.ExtensionConfig;
-import com.alec.InnovateX.spring.extension.ExtensionDemoBean;
+import com.alec.InnovateX.spring.extension.ExtensionTimeline;
+import com.alec.InnovateX.spring.extension.OnDemandService;
+import com.alec.InnovateX.spring.extension.ReportDocument;
+import com.alec.InnovateX.spring.extension.ReportDocumentFactoryBean;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 容器扩展点（注解装配版）：FactoryBean 的产品/本体两种获取方式、
- * BFPP 在实例化前改写 BeanDefinition、三类后处理器随容器装配生效
+ * 主题：容器扩展点。覆盖知识点：
+ * 1. FactoryBean：按名/按产品类型取"产品"，& 前缀/按工厂类型取"工厂本身"，isSingleton 缓存产品；
+ * 2. BFPP 改写 BeanDefinition（lazy-init false 翻 true）：refresh 后不实例化、getBean 才构造；
+ * 3. BeanPostProcessor / InstantiationAwareBeanPostProcessor / BFPP 三类后处理器在正确环节生效；
+ * 4. 后处理器必须 static @Bean 注册的原因（见 ExtensionConfig 注释）。
  */
 public class ExtensionTest {
 
     @Test
-    public void factoryBeanProductAndItself() {
+    public void factoryBeanProductVersusFactoryItself() {
+        ReportDocumentFactoryBean.PRODUCT_CREATIONS.set(0);
         try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ExtensionConfig.class)) {
-            // 按名称（不带 &）：拿到的是"产品"（getObject() 的产物）
-            Object byName = ctx.getBean("appFactoryBean");
-            assertInstanceOf(AppFaBean.class, byName);
-            assertEquals("源生", ((AppFaBean) byName).getAppFaBeanName());
+            // 按名字（不带 &）：拿到的不是工厂，而是 getObject() 的产品
+            Object byName = ctx.getBean("reportDocumentFactory");
+            ReportDocument product = assertInstanceOf(ReportDocument.class, byName,
+                    "按名取 FactoryBean 注册名，得到的是产品");
+            assertEquals("InnovateX-年度报告", product.getTitle());
 
-            // 按 FactoryBean 类型 或 "&"前缀：拿到的是工厂本身（需自行 getObject()）
-            assertInstanceOf(AppFactoryBean.class, ctx.getBean(AppFactoryBean.class));
-            assertInstanceOf(AppFactoryBean.class, ctx.getBean("&appFactoryBean"));
-            System.out.println("FactoryBean: 按名称拿产品 " + byName
-                    + "；按工厂类型或 '&' 前缀拿工厂本身（需自行 getObject()）");
+            // 按产品类型：同样解析到产品，且是同一个实例
+            ReportDocument byProductType = ctx.getBean(ReportDocument.class);
+            assertSame(byName, byProductType, "isSingleton=true：产品被缓存，多次获取同一实例");
+
+            // "&" 前缀 / 按工厂类型：拿到工厂本身（需自行 getObject()）
+            Object factoryByAmpersand = ctx.getBean("&reportDocumentFactory");
+            assertInstanceOf(ReportDocumentFactoryBean.class, factoryByAmpersand);
+            assertSame(factoryByAmpersand, ctx.getBean(ReportDocumentFactoryBean.class));
+
+            // 单例产品只生产一次
+            assertEquals(1, ReportDocumentFactoryBean.PRODUCT_CREATIONS.get(),
+                    "isSingleton=true：多次 getBean 只触发一次 getObject()");
+            System.out.println("[ExtensionTest] 产品=" + product + "，工厂=" + factoryByAmpersand
+                    + "，getObject 调用次数=" + ReportDocumentFactoryBean.PRODUCT_CREATIONS.get());
         }
     }
 
     @Test
-    public void beanFactoryPostProcessorRewritesDefinition() {
-        ExtensionDemoBean.instantiated = false;
-        // BFPP 在"所有定义就绪之后、单例实例化之前"把 extensionDemoBean 改成了 lazy：
-        // refresh 结束它不该被创建，第一次 getBean 才构造
+    public void beanFactoryPostProcessorFlipsLazyInit() {
+        ExtensionTimeline.TIMELINE.clear();
+        OnDemandService.INSTANTIATED = false;
         try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ExtensionConfig.class)) {
-            assertFalse(ExtensionDemoBean.instantiated, "BFPP 改写 lazy 后 refresh 不应实例化目标 Bean");
-            ExtensionDemoBean bean = ctx.getBean(ExtensionDemoBean.class);
-            assertTrue(ExtensionDemoBean.instantiated);
-            System.out.println("BFPP 改写 Definition 生效: refresh 后 lazy，getBean 时才构造 "
-                    + bean.getClass().getSimpleName());
+            // BFPP 已在"定义就绪后、实例化前"把 lazy-init 翻成 true：定义层可查
+            assertTrue(ctx.getBeanFactory().getBeanDefinition("onDemandService").isLazyInit(),
+                    "BFPP 改写后定义应为 lazy-init=true");
+            // 时序断言：refresh 结束时 BFPP 已执行、但目标 Bean 尚未构造
+            assertEquals(List.of("bfpp:lazy-init已翻为true"), ExtensionTimeline.TIMELINE,
+                    "refresh 期间只有 BFPP 一条事件");
+            assertFalse(OnDemandService.INSTANTIATED, "被改成 lazy 后 refresh 不应实例化目标 Bean");
+
+            // 第一次 getBean 才真正构造
+            assertEquals("pong:按需服务", ctx.getBean(OnDemandService.class).ping());
+            assertTrue(OnDemandService.INSTANTIATED, "getBean 时才构造");
+            System.out.println("[ExtensionTest] BFPP 改写生效: refresh 后不实例化，getBean 时才构造");
         }
     }
 
     @Test
-    public void postProcessorsWired() {
-        // 三类后处理器本身就是普通 Bean（static @Bean 声明）；容器构建成功且它们的打印已产生即证明生效
+    public void threePostProcessorFamiliesInterceptAtRightPhases() {
+        ExtensionTimeline.TIMELINE.clear();
+        OnDemandService.INSTANTIATED = false;
         try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ExtensionConfig.class)) {
-            assertInstanceOf(AppBeanPostProcessor.class, ctx.getBean(AppBeanPostProcessor.class));
-            assertInstanceOf(AppInstantiationAwareBeanPostProcessor.class,
-                    ctx.getBean(AppInstantiationAwareBeanPostProcessor.class));
-            assertInstanceOf(AppBeanFactoryPostProcessor.class,
-                    ctx.getBean(AppBeanFactoryPostProcessor.class));
-            System.out.println("BPP/InstantiationAwareBPP/BFPP: 均已注册并对容器内 Bean 生效");
+            ctx.getBean(OnDemandService.class);
+            // 一条时间线看全三类扩展点的管辖区间：
+            // BFPP（定义层）→ IABPP 实例化前 → 构造 → IABPP 实例化后/属性前 → IABPP 属性加工 → BPP 初始化前 → BPP 初始化后
+            List<String> expected = List.of(
+                    "bfpp:lazy-init已翻为true",
+                    "iabpp:postProcessBeforeInstantiation",
+                    "onDemandService:构造器",
+                    "iabpp:postProcessAfterInstantiation",
+                    "iabpp:postProcessProperties",
+                    "bpp:postProcessBeforeInitialization",
+                    "bpp:postProcessAfterInitialization");
+            assertEquals(expected, ExtensionTimeline.TIMELINE, "三类后处理器按固定环节依次介入");
+            System.out.println("[ExtensionTest] 扩展点时间线: " + ExtensionTimeline.TIMELINE);
         }
     }
 }

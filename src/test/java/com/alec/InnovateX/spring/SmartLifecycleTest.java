@@ -1,82 +1,115 @@
 package com.alec.InnovateX.spring;
 
-import com.alec.InnovateX.spring.lifecycle.FullLifecycleBean;
-import com.alec.InnovateX.spring.lifecycle.FullLifecycleConfig;
-import com.alec.InnovateX.spring.lifecycle.LifecycleConfig;
-import com.alec.InnovateX.spring.lifecycle.PhaseOneLifecycle;
-import com.alec.InnovateX.spring.lifecycle.PhaseTwoLifecycle;
-import com.alec.InnovateX.spring.lifecycle.SmartSingletonHook;
+import com.alec.InnovateX.spring.lifecycle.AllSingletonsReadyHook;
+import com.alec.InnovateX.spring.lifecycle.ComputeLifecycle;
+import com.alec.InnovateX.spring.lifecycle.FullChainBean;
+import com.alec.InnovateX.spring.lifecycle.FullChainConfig;
+import com.alec.InnovateX.spring.lifecycle.LifecycleEventLog;
+import com.alec.InnovateX.spring.lifecycle.PlainWorkerBean;
+import com.alec.InnovateX.spring.lifecycle.SmartLifecycleConfig;
+import com.alec.InnovateX.spring.lifecycle.StorageLifecycle;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 主题⑧Smart 系回调：SmartInitializingSingleton（全体单例就绪）、
- * SmartLifecycle（phase 控制启停顺序、autoStartup）
+ * 主题：生命周期。覆盖知识点：
+ * 1. 满配 Bean 完整 13 步回调链的精确顺序（初始化 10 步 + 销毁反序 3 步）；
+ * 2. SmartLifecycle phase 升序启动、降序停止、autoStartup 自动启动；
+ * 3. SmartInitializingSingleton 全体非懒单例就绪后回调一次（对比 @PostConstruct 只代表单个 Bean 就绪）。
  */
 public class SmartLifecycleTest {
 
-    @Test
-    public void smartCallbacksAndPhaseOrder() {
-        PhaseOneLifecycle.EVENTS.clear();
-        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(LifecycleConfig.class)) {
-            // SmartInitializingSingleton：refresh 尾声被回调，且此时所有单例已初始化
-            assertTrue(SmartSingletonHook.isInvoked());
-            assertTrue(SmartSingletonHook.isPlainBeanReadyWhenInvoked());
+    /** 初始化阶段 10 步（销毁前）。注意 06/07：Spring 7 实测自定义 BPP 前置先于 @PostConstruct，
+     *  原因见 ChainWatchProcessor 类注释（内部注解处理器被挪到处理器链末尾） */
+    private static final List<String> EXPECTED_INIT_CHAIN = List.of(
+            "01-构造器实例化",
+            "02-属性填充：@Autowired setter 注入",
+            "03-BeanNameAware.setBeanName",
+            "04-BeanFactoryAware.setBeanFactory",
+            "05-ApplicationContextAware.setApplicationContext",
+            "06-自定义BeanPostProcessor.postProcessBeforeInitialization",
+            "07-@PostConstruct",
+            "08-InitializingBean.afterPropertiesSet",
+            "09-@Bean(initMethod=manualInit)",
+            "10-自定义BeanPostProcessor.postProcessAfterInitialization");
 
-            // SmartLifecycle autoStartup：refresh 结束即自动 start，phase 升序
-            assertEquals(2, PhaseOneLifecycle.EVENTS.size());
-            assertEquals("phase1-start", PhaseOneLifecycle.EVENTS.get(0));
-            assertEquals("phase2-start", PhaseOneLifecycle.EVENTS.get(1));
-            assertTrue(ctx.getBean(PhaseOneLifecycle.class).isRunning());
-            assertTrue(ctx.getBean(PhaseTwoLifecycle.class).isRunning());
+    /** 销毁阶段 3 步（与初始化大体反序） */
+    private static final List<String> EXPECTED_DESTROY_CHAIN = List.of(
+            "11-@PreDestroy",
+            "12-DisposableBean.destroy",
+            "13-@Bean(destroyMethod=manualDestroy)");
+
+    /** refresh 到 close 的完整启停剧本（SmartLifecycle 主题） */
+    private static final List<String> EXPECTED_START_STOP_SCRIPT = List.of(
+            "hook:@PostConstruct(worker已就绪=false)",
+            "worker:@PostConstruct",
+            "hook:afterSingletonsInstantiated(worker已就绪=true)",
+            "storage:start(phase=10)",
+            "compute:start(phase=20,storage运行中=true)",
+            "compute:stop(storage仍在运行=true)",
+            "storage:stop(phase=10)");
+
+    @Test
+    public void fullLifecycleThirteenSteps() {
+        FullChainBean.TRACE.clear();
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(FullChainConfig.class)) {
+            // 容器打开期间只有初始化 10 步：精确断言顺序
+            assertEquals(EXPECTED_INIT_CHAIN, FullChainBean.TRACE, "初始化阶段应为固定 10 步");
+            System.out.println("[SmartLifecycleTest] 初始化 10 步: " + FullChainBean.TRACE);
         }
-        // close()：phase 降序 stop（2 先停、1 后停），再销毁 Bean
-        assertEquals(4, PhaseOneLifecycle.EVENTS.size());
-        assertEquals("phase2-stop", PhaseOneLifecycle.EVENTS.get(2));
-        assertEquals("phase1-stop", PhaseOneLifecycle.EVENTS.get(3));
-        System.out.println("SmartLifecycle 启停事件序列: " + PhaseOneLifecycle.EVENTS);
+        // try-with-resources 的 close() 触发销毁 3 步（此时容器已关闭，静态 TRACE 仍可读）
+        List<String> full = List.copyOf(FullChainBean.TRACE);
+        assertEquals(EXPECTED_INIT_CHAIN.size() + EXPECTED_DESTROY_CHAIN.size(), full.size(), "共 13 步");
+        assertEquals(EXPECTED_DESTROY_CHAIN, full.subList(10, 13), "销毁阶段反序三步");
+        System.out.println("[SmartLifecycleTest] 完整 13 步: " + full);
     }
 
     @Test
-    public void fullLifecycleChain() {
-        FullLifecycleBean.EVENTS.clear();
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(FullLifecycleConfig.class);
-        try {
-            // 初始化阶段：10 个事件（含自定义 BPP 的前置/后置）
-            List<String> events = FullLifecycleBean.EVENTS;
-            assertEquals(10, events.size());
-            System.out.println("满配 Bean 初始化链条: " + events);
-            // 确定顺序的主链：构造 -> 属性填充 -> Aware×3 -> (@PostConstruct 与自定义BPP前置) -> afterPropertiesSet -> initMethod -> BPP后置
-            int i1 = events.indexOf("1.构造器实例化");
-            int i2 = events.indexOf("2.@Autowired setter注入");
-            int i3 = events.indexOf("3.BeanNameAware.setBeanName");
-            int i4 = events.indexOf("4.BeanFactoryAware.setBeanFactory");
-            int i5 = events.indexOf("5.ApplicationContextAware.setApplicationContext");
-            int i6 = events.indexOf("6.@PostConstruct");
-            int i7 = events.indexOf("7.BeanPostProcessor.beforeInitialization");
-            int i8 = events.indexOf("8.InitializingBean.afterPropertiesSet");
-            int i9 = events.indexOf("9.@Bean(initMethod)自定义初始化");
-            int iAfter = events.indexOf("BeanPostProcessor.afterInitialization（初始化完成，代理一般在此生成）");
-            assertTrue(i1 < i2 && i2 < i3 && i3 < i4 && i4 < i5);
-            // @PostConstruct 与自定义 BPP 前置的相对顺序取决于 BPP 注册顺序与 Ordered 值，
-            // 只断言两者都落在 ApplicationContextAware 之后、afterPropertiesSet 之前
-            assertTrue(i5 < i6 && i6 < i8);
-            assertTrue(i5 < i7 && i7 < i8);
-            assertTrue(i8 < i9 && i9 < iAfter);
-        } finally {
-            ctx.close();
+    public void smartLifecyclePhaseOrderAndAutoStartup() {
+        LifecycleEventLog.EVENTS.clear();
+        PlainWorkerBean.INITIALIZED = false; // 静态演示状态跨测试残留，先复位
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SmartLifecycleConfig.class)) {
+            // autoStartup：从未调用 context.start()，refresh 结束即自动启动
+            assertTrue(ctx.getBean(StorageLifecycle.class).isRunning(), "autoStartup=true：refresh 后自动 start");
+            assertTrue(ctx.getBean(ComputeLifecycle.class).isRunning());
+            assertEquals(10, ctx.getBean(StorageLifecycle.class).getPhase());
+            assertEquals(20, ctx.getBean(ComputeLifecycle.class).getPhase());
+            // 启动顺序：phase 升序（storage=10 先于 compute=20）
+            assertTrue(LifecycleEventLog.EVENTS.indexOf("storage:start(phase=10)")
+                            < LifecycleEventLog.EVENTS.indexOf("compute:start(phase=20,storage运行中=true)"),
+                    "phase 小的先启动");
         }
-        // 销毁阶段：@PreDestroy -> DisposableBean.destroy -> @Bean(destroyMethod)
-        List<String> events = FullLifecycleBean.EVENTS;
-        assertEquals(13, events.size());
-        System.out.println("满配 Bean 完整链条: " + events);
-        assertTrue(events.indexOf("10.@PreDestroy") == 10);
-        assertTrue(events.indexOf("11.DisposableBean.destroy") == 11);
-        assertTrue(events.indexOf("12.@Bean(destroyMethod)自定义销毁") == 12);
+        // close()：phase 降序停止（compute 先停，且停时依赖的 storage 仍在运行）
+        assertEquals(EXPECTED_START_STOP_SCRIPT, LifecycleEventLog.EVENTS, "完整启停剧本");
+        System.out.println("[SmartLifecycleTest] 启停剧本: " + LifecycleEventLog.EVENTS);
+    }
+
+    @Test
+    public void smartInitializingSingletonFiresOnceAfterAllSingletons() {
+        LifecycleEventLog.EVENTS.clear();
+        AllSingletonsReadyHook.AFTER_SINGLETONS_CALLS.set(0);
+        PlainWorkerBean.INITIALIZED = false; // 静态演示状态跨测试残留，先复位
+        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SmartLifecycleConfig.class)) {
+            // 全体非懒单例就绪后只回调一次
+            assertEquals(1, AllSingletonsReadyHook.AFTER_SINGLETONS_CALLS.get(), "afterSingletonsInstantiated 恰好一次");
+            // 对比 @PostConstruct：hook 自己就绪时 worker 尚未创建；全体就绪回调时 worker 必然已就绪
+            assertFalse(AllSingletonsReadyHook.WORKER_READY_AT_POST_CONSTRUCT,
+                    "hook 的 @PostConstruct 时刻 worker 尚未就绪（单个 Bean 就绪 ≠ 全体就绪）");
+            assertTrue(AllSingletonsReadyHook.WORKER_READY_AT_ALL_SINGLETONS,
+                    "afterSingletonsInstantiated 时刻全体单例（含 worker）已就绪");
+            assertTrue(PlainWorkerBean.INITIALIZED);
+            // 时序：hook 的 @PostConstruct < worker 的 @PostConstruct < afterSingletonsInstantiated
+            int iHookPostConstruct = LifecycleEventLog.EVENTS.indexOf("hook:@PostConstruct(worker已就绪=false)");
+            int iWorkerPostConstruct = LifecycleEventLog.EVENTS.indexOf("worker:@PostConstruct");
+            int iAllSingletons = LifecycleEventLog.EVENTS.indexOf("hook:afterSingletonsInstantiated(worker已就绪=true)");
+            assertTrue(iHookPostConstruct < iWorkerPostConstruct && iWorkerPostConstruct < iAllSingletons);
+            System.out.println("[SmartLifecycleTest] 单例就绪时序: " + LifecycleEventLog.EVENTS);
+        }
     }
 }

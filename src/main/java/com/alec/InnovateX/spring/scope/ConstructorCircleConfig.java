@@ -4,19 +4,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 构造器注入循环依赖：三级缓存只能拯救"先实例化、后填充属性"的注入方式，
- * 构造器注入连第一步实例化都完不成，refresh 阶段直接抛 BeanCurrentlyInCreationException
+ * 构造器注入循环依赖装配：对比 {@link SetterCircleConfig}——同样的环，
+ * 换成构造器注入后三级缓存彻底失效，refresh 直接失败。
+ * 结论：构造器循环要么改 setter/字段注入，要么在注入点加 @Lazy（见 LazyCircleConfig）。
  */
 @Configuration
 public class ConstructorCircleConfig {
 
     @Bean
-    public ConstructorCircleA constructorCircleA(ConstructorCircleB b) {
-        return new ConstructorCircleA(b);
+    public PayCore payCore(RiskCore riskCore) {
+        return new PayCore(riskCore);
     }
 
     @Bean
-    public ConstructorCircleB constructorCircleB(ConstructorCircleA a) {
-        return new ConstructorCircleB(a);
+    public RiskCore riskCore(PayCore payCore) {
+        return new RiskCore(payCore);
     }
 }
