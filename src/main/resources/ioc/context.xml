@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- XML 方式的容器一瞥：Spring 7 仍完整支持 XML 配置，schema 由 jar 内解析、无需联网 -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="orderRepository" class="com.alec.InnovateX.spring.ioc.OrderRepository"/>
+
+    <bean id="orderService" class="com.alec.InnovateX.spring.ioc.OrderService">
+        <constructor-arg ref="orderRepository"/>
+    </bean>
+
+    <bean id="greeter" class="com.alec.InnovateX.spring.ioc.Greeter">
+        <property name="message" value="来自 XML 的问候"/>
+    </bean>
+</beans>
